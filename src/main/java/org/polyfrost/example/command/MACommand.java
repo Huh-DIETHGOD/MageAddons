@@ -1,6 +1,6 @@
 package org.polyfrost.example.command;
 
-import org.polyfrost.example.ExampleMod;
+import org.polyfrost.example.MageAddonsMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 
@@ -10,12 +10,12 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
  *
  * @see Command
  * @see Main
- * @see ExampleMod
+ * @see MageAddonsMod
  */
-@Command(value = ExampleMod.MODID, description = "Access the " + ExampleMod.NAME + " GUI.")
-public class ExampleCommand {
+@Command(value = MageAddonsMod.MODID, description = "Access the " + MageAddonsMod.NAME + " GUI.")
+public class MACommand {
     @Main
     private void handle() {
-        ExampleMod.INSTANCE.config.openGui();
+        MageAddonsMod.INSTANCE.config.openGui();
     }
 }
