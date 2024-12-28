@@ -1,6 +1,6 @@
-package org.polyfrost.example.command;
+package ultimate.huh.MageAddons.command;
 
-import org.polyfrost.example.MageAddonsMod;
+import ultimate.huh.MageAddons.MageAddonsMod;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command;
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main;
 

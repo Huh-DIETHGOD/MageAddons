@@ -1,7 +1,7 @@
-package org.polyfrost.example.hud;
+package ultimate.huh.MageAddons.hud;
 
 import cc.polyfrost.oneconfig.hud.SingleTextHud;
-import org.polyfrost.example.config.MAConfig;
+import ultimate.huh.MageAddons.config.MAConfig;
 
 /**
  * An example OneConfig HUD that is started in the config and displays text.

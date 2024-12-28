@@ -1,18 +1,17 @@
-package org.polyfrost.example;
+package ultimate.huh.MageAddons;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
-import org.polyfrost.example.command.MACommand;
-import org.polyfrost.example.config.MAConfig;
+import ultimate.huh.MageAddons.command.MACommand;
+import ultimate.huh.MageAddons.config.MAConfig;
 import cc.polyfrost.oneconfig.events.event.InitializationEvent;
 import net.minecraftforge.fml.common.Mod;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 /**
  * The entrypoint of the Example Mod that initializes it.

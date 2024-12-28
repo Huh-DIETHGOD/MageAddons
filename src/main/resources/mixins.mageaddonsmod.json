@@ -7,7 +7,7 @@
     "maxShiftBy": 5
   },
   "client": [
-    "MinecraftMixin"
+    "ultimate.huh.MageAddons.mixin.MinecraftMixin"
   ],
   "verbose": true
 }

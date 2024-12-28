@@ -1,7 +1,7 @@
-package org.polyfrost.example.config;
+package ultimate.huh.MageAddons.config;
 
-import org.polyfrost.example.MageAddonsMod;
-import org.polyfrost.example.hud.MAHud;
+import ultimate.huh.MageAddons.MageAddonsMod;
+import ultimate.huh.MageAddons.hud.MAHud;
 import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.annotations.Dropdown;
 import cc.polyfrost.oneconfig.config.annotations.HUD;
