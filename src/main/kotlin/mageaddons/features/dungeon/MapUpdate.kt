@@ -34,7 +34,7 @@ object MapUpdate {
             with(tabEntries[i]) {
                 val name = StringUtils.stripControlCodes(second).trim().substringAfterLast("] ").split(" ")[0]
                 if (name != "") {
-                    Dungeon.dungeonTeammates[name] = DungeonPlayer(first.locationSkin).apply {
+                    Dungeon.dungeonTeammates[name] = DungeonPlayer(skin = first.locationSkin, null, null, null, null).apply {
                         mc.theWorld.getPlayerEntityByName(name)?.let { setData(it) }
                         colorPrefix = second.substringBefore(name, "f").last()
                         this.name = name

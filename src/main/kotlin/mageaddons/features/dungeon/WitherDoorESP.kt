@@ -5,6 +5,7 @@ import mageaddons.config.Config
 import mageaddons.core.map.RoomState
 import mageaddons.utils.Location.inBoss
 import mageaddons.utils.Location.inDungeons
+import mageaddons.utils.MessageUtils.devMessage
 import mageaddons.utils.RenderUtils
 import mageaddons.utils.RenderUtils.getInterpolatedPosition
 import net.minecraft.client.renderer.GlStateManager
@@ -30,7 +31,7 @@ object WitherDoorESP {
                 Config.witherDoorOutlineWidth,
                 Config.witherDoorOutline,
                 Config.witherDoorFill,
-                true
+                true,
             )
         }
         GlStateManager.translate(x, y, z)

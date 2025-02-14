@@ -21,13 +21,6 @@ import java.awt.Color
 
 object MapRender {
     var dynamicRotation = 0f
-    var legitPeek = false
-        set(value) {
-            if (field != value ) {
-                MapRenderList.renderUpdated = true
-            }
-            field = value
-        }
 
     fun renderMap() {
         mc.mcProfiler.startSection("border")
@@ -101,7 +94,7 @@ object MapRender {
 //                0.0
 //            )
 //        } else {
-//            GlStateManager.translate(-64.0, -64.0, 0.0)
+            GlStateManager.translate(-64.0, -64.0, 0.0)
 //        }
     }
 
@@ -123,18 +116,18 @@ object MapRender {
 
                 var color = tile.color
 
-//                if (tile.state.equalsOneOf(
-//                        RoomState.UNDISCOVERED,
-//                        RoomState.UNOPENED
-//                    ) && !legitRender && Dungeon.Info.startTime != 0L
-//                ) {
-//                    if (Config.mapDarkenUndiscovered) {
-//                        color = color.darken(1 - Config.mapDarkenPercent)
-//                    }
-//                    if (Config.mapGrayUndiscovered) {
-//                        color = color.grayScale()
-//                    }
-//                }
+                if (tile.state.equalsOneOf(
+                        RoomState.UNDISCOVERED,
+                        RoomState.UNOPENED
+                    ) && Dungeon.Info.startTime != 0L
+                ) {
+                    if (Config.mapDarkenUndiscovered) {
+                        color = color.darken(1 - Config.mapDarkenPercent)
+                    }
+                    if (Config.mapGrayUndiscovered) {
+                        color = color.grayScale()
+                    }
+                }
 
                 when {
                     xEven && yEven -> if (tile is Room) {
@@ -233,7 +226,7 @@ object MapRender {
     fun renderPlayerHeads() {
         try {
             if (Dungeon.dungeonTeammates.isEmpty()) {
-                RenderUtils.drawPlayerHead(mc.thePlayer.name, DungeonPlayer(mc.thePlayer.locationSkin).apply {
+                RenderUtils.drawPlayerHead(mc.thePlayer.name, DungeonPlayer(mc.thePlayer.locationSkin, null, null, null, null).apply {
                     yaw = mc.thePlayer.rotationYaw
                 })
             } else {

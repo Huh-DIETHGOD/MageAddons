@@ -1,6 +1,8 @@
-package mageaddons.utils
+package mageaddons.utils.impl
 
 import mageaddons.config.PersonalBestConfig
+import org.lwjgl.util.Color
+import org.lwjgl.util.ReadableColor
 
 enum class Blessing(
     var regex: Regex,
@@ -18,6 +20,31 @@ enum class Blessing(
     }
 }
 
+/**
+ * Enumeration representing player classes in a dungeon setting.
+ *
+ * Each class is associated with a specific code and color used for formatting in the game. The classes include Archer,
+ * Mage, Berserk, Healer, and Tank.
+ *
+ * @property color The color associated with the class.
+ * @property defaultQuadrant The default quadrant for the class.
+ * @property priority The priority of the class.
+ *
+ */
+enum class DungeonClass(
+    val color: ReadableColor,
+    val colorCode: Char,
+    val defaultQuadrant: Int,
+    var priority: Int,
+) {
+    Archer(Color.RED, '6', 0, 2),
+    Berserk(Color.ORANGE, '4', 1, 0),
+    Healer(Color(255, 192, 203), 'd', 2, 2),
+    Mage(Color.BLUE, 'b', 3, 2),
+    Tank(Color.GREEN, '2', 3, 1),
+    Unknown(Color.WHITE, 'f', 0, 0)
+}
+
 class PersonalBest(val name: String, val size: Int) {
     var pb
         get() = PersonalBestConfig.pbs[name]
@@ -31,7 +58,7 @@ class PersonalBest(val name: String, val size: Int) {
             PersonalBestConfig.saveConfig()
         }
     }
-
+}
     /**
      * Enumeration representing different floors in a dungeon.
      *
@@ -98,4 +125,4 @@ class PersonalBest(val name: String, val size: Int) {
     enum class M7Phases(val displayName: String) {
         P1("P1"), P2("P2"), P3("P3"), P4("P4"), P5("P5"), Unknown("Unknown");
     }
-}
+

@@ -8,6 +8,7 @@ import mageaddons.features.dungeon.DungeonScan
 import mageaddons.features.dungeon.ScanUtils
 import mageaddons.utils.Utils
 import gg.essential.universal.UChat
+import mageaddons.utils.MessageUtils.modMessage
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
@@ -53,17 +54,17 @@ class MageAddonsCommands : CommandBase() {
                 val data = ScanUtils.getRoomData(pos.first, pos.second)
                 if (data != null) {
                     GuiScreen.setClipboardString(data.toString())
-                    Utils.modMessage("§aCopied room data to clipboard.")
+                    modMessage("§aCopied room data to clipboard.")
                 } else {
                     GuiScreen.setClipboardString(ScanUtils.getCore(pos.first, pos.second).toString())
-                    Utils.modMessage("§cExisting room data not found. §aCopied room core to clipboard.")
+                    modMessage("§cExisting room data not found. §aCopied room core to clipboard.")
                 }
             }
             "personbest" -> {
 
             }
             // Unknown command help message
-            else -> Utils.modMessage("§cUnknown command. Use §b/§fmageaddons help §cfor a list of commands.")
+            else -> modMessage("§cUnknown command. Use §b/§fmageaddons help §cfor a list of commands.")
         }
     }
 

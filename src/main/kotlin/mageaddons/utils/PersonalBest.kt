@@ -1,12 +1,21 @@
 package mageaddons.utils
 
 import mageaddons.config.PersonalBestConfig
-import mageaddons.utils.Utils.modMessage
+import mageaddons.utils.MessageUtils.modMessage
 
-class PB(val name: String, val size: Int) {
-    class PersonalBest(val name: String, val size: Int) {
+class PB(
+    val name: String,
+    val size: Int,
+) {
+    class PersonalBest(
+        val name: String,
+        val size: Int,
+    ) {
         var pb get() = PersonalBestConfig.pbs[name]
-            set(value) { value?.let { PersonalBestConfig.pbs[name] = it } }
+            set(value) {
+                value?.let { PersonalBestConfig.pbs[name] = it }
+            }
+
         init {
             if (pb == null || pb?.size != size) {
                 pb = MutableList(size) { 9999.0 }
@@ -35,7 +44,17 @@ class PB(val name: String, val size: Int) {
          * @param alwaysSendPB Whether to always send the old personal best in the message.
          * @param sendMessage Whether to send the message at all.
          */
-        fun time(index: Int, time: Double, unit: String = "s§7!", message: String, addPBString: Boolean, addOldPBString: Boolean, sendOnlyPB: Boolean = false, alwaysSendPB: Boolean = false, sendMessage: Boolean = true) {
+        fun time(
+            index: Int,
+            time: Double,
+            unit: String = "s§7!",
+            message: String,
+            addPBString: Boolean,
+            addOldPBString: Boolean,
+            sendOnlyPB: Boolean = false,
+            alwaysSendPB: Boolean = false,
+            sendMessage: Boolean = true,
+        ) {
             var msg = "$message$time$unit"
             val oldPB = pb?.getSafe(index) ?: 999.0
             if (oldPB > time) {
@@ -43,10 +62,15 @@ class PB(val name: String, val size: Int) {
                 if (addPBString) msg += " §7(§d§lNew PB§r§7)"
                 if (addOldPBString) msg += " Old PB was §8$oldPB"
                 if (sendMessage) modMessage(msg)
-            } else if (!sendOnlyPB && sendMessage) modMessage("$msg ${if (alwaysSendPB) "(§8$oldPB§7)" else ""}")
+            } else if (!sendOnlyPB && sendMessage) {
+                modMessage("$msg ${if (alwaysSendPB) "(§8$oldPB§7)" else ""}")
+            }
         }
 
-        fun set(index: Int, value: Double) {
+        fun set(
+            index: Int,
+            value: Double,
+        ) {
             pb?.set(index, value)
             PersonalBestConfig.saveConfig()
         }

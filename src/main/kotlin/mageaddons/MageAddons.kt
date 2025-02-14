@@ -1,16 +1,20 @@
 package mageaddons
 
-import mageaddons.commands.MageAddonsCommands
-import mageaddons.config.Config
-import mageaddons.features.dungeon.*
-import mageaddons.ui.GuiRenderer
-import mageaddons.utils.Location
-import mageaddons.utils.RenderUtils
-import mageaddons.utils.UpdateChecker
 import gg.essential.api.EssentialAPI
+import gg.essential.universal.UChat
 import gg.essential.vigilance.gui.SettingsGui
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mageaddons.commands.MageAddonsCommands
+import mageaddons.config.Config
+import mageaddons.config.PersonalBestConfig
+import mageaddons.core.ModuleManager
+import mageaddons.events.EventDispatcher
+import mageaddons.features.QOL.HotKeys
+import mageaddons.features.QOL.HotKeys.transformKey
+import mageaddons.features.dungeon.*
+import mageaddons.ui.GuiRenderer
+import mageaddons.utils.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.settings.KeyBinding
@@ -27,7 +31,6 @@ import net.minecraftforge.fml.common.gameevent.InputEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.lwjgl.input.Keyboard
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
@@ -37,20 +40,22 @@ import kotlin.coroutines.EmptyCoroutineContext
     modid = MageAddons.MOD_ID,
     name = MageAddons.MOD_NAME,
     version = MageAddons.MOD_VERSION,
-    modLanguageAdapter = "mageaddons.utils.KotlinAdapter"
+    modLanguageAdapter = "mageaddons.utils.KotlinAdapter",
 )
 object MageAddons {
     const val MOD_ID = "mageaddons"
     const val MOD_NAME = "Mage Addons"
     const val MOD_VERSION = "0.0.1"
     val CHAT_PREFIX: String
-        get() = "§b§l<§f${Config.customPrefix.ifBlank { MOD_NAME }}§b§l>§r"
+        get() = "§b§l<§f${ MOD_NAME }§b§l>§r"
 
     val mc: Minecraft = Minecraft.getMinecraft()
     var display: GuiScreen? = null
-    private val toggleLegitKey = KeyBinding("Legit Peek", Keyboard.KEY_NONE, "Mage Addons")
     val scope = CoroutineScope(EmptyCoroutineContext)
     val logger: Logger = LogManager.getLogger("MageAddons")
+
+    var equipmentKey = KeyBinding("/eq", transformKey(Config.equipmentHotKey), "Mage Addons")
+    var wardrobeKey = KeyBinding("/wd", transformKey(Config.wardrobeHotKey), "Mage Addons")
 
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
@@ -59,12 +64,26 @@ object MageAddons {
 
     @Mod.EventHandler
     fun onInit(event: FMLInitializationEvent) {
-        ClientCommandHandler.instance.registerCommand((MageAddonsCommands()))
+        PersonalBestConfig.loadConfig()
+        ClientCommandHandler.instance.registerCommand(MageAddonsCommands())
         listOf(
-            this, Dungeon, GuiRenderer, Location, RunInformation, WitherDoorESP
+            this,
+            Dungeon,
+            GuiRenderer,
+            Location,
+            RunInformation,
+            HotKeys,
+            PlayerUtils,
+            Utils,
+            ModuleManager,
+            EventDispatcher,
+            WitherDoorESP
         ).forEach(MinecraftForge.EVENT_BUS::register)
         RenderUtils
-        ClientRegistry.registerKeyBinding(toggleLegitKey)
+        listOf(
+            wardrobeKey,
+            equipmentKey,
+        ).forEach(ClientRegistry::registerKeyBinding)
     }
 
     @Mod.EventHandler
@@ -101,9 +120,12 @@ object MageAddons {
 
     @SubscribeEvent
     fun onKey(event: InputEvent.KeyInputEvent) {
-//      if (Config.peekMode == 0 && toggleLegitKey.isPressed) {
-//      MapRender.legitPeek = !MapRender.legitPeek
-//      }
+        while (equipmentKey.isPressed) {
+            if (Config.equipmentHotKeyEnabled) UChat.say("/equipment")
+        }
+        while (wardrobeKey.isPressed && Config.wardrobeHotKeyEnabled) {
+            if (Config.wardrobeHotKeyEnabled) UChat.say("/wardrobe")
+        }
     }
 
     @SubscribeEvent

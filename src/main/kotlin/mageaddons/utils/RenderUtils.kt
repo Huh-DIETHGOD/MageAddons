@@ -10,13 +10,17 @@ import mageaddons.utils.Utils.equalsOneOf
 import mageaddons.utils.Utils.itemID
 import gg.essential.elementa.utils.withAlpha
 import net.minecraft.client.gui.Gui
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.WorldRenderer
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
+import net.minecraftforge.client.event.RenderGameOverlayEvent
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.GL_LINE_STRIP
 import org.lwjgl.opengl.GL11.GL_QUADS
@@ -63,7 +67,14 @@ object RenderUtils {
         tessellator.draw()
     }
 
-    fun drawBox(aabb: AxisAlignedBB, color: Color, width: Float, outline: Float, fill: Float, ignoreDepth: Boolean) {
+    fun drawBox(
+        aabb: AxisAlignedBB,
+        color: Color,
+        width: Float,
+        outline: Float,
+        fill: Float,
+        ignoreDepth: Boolean
+    ) {
         GlStateManager.pushMatrix()
         preDraw()
         GlStateManager.depthMask(!ignoreDepth)
@@ -76,6 +87,18 @@ object RenderUtils {
         GlStateManager.depthMask(true)
         postDraw()
         GlStateManager.popMatrix()
+    }
+
+    fun drawBlock(
+        pos: BlockPos,
+        color: Color,
+        outlineWidth: Number = 3,
+        outlineAlpha: Number = 1,
+        fill: Number = 1,
+        depth: Boolean = false,
+        lineSmoothing: Boolean = true,
+        expand: Double = 0.0
+    ){
     }
 
     fun renderRect(x: Number, y: Number, w: Number, h: Number, color: Color) {
@@ -110,13 +133,6 @@ object RenderUtils {
         GlStateManager.pushMatrix()
         GlStateManager.translate(x.toFloat(), y.toFloat(), 0f)
         GlStateManager.scale(Config.textScale, Config.textScale, 1f)
-
-//        if (Config.mapRotate) {
-//            GlStateManager.rotate(mc.thePlayer.rotationYaw + 180f, 0f, 0f, 1f)
-//        } else if (Config.mapDynamicRotate) {
-//            GlStateManager.rotate(-MapRender.dynamicRotation, 0f, 0f, 1f)
-//        }
-
         val fontHeight = mc.fontRendererObj.FONT_HEIGHT + 1
         val yTextOffset = text.size * fontHeight / -2f
 
@@ -129,11 +145,6 @@ object RenderUtils {
                 true
             )
         }
-
-//        if (Config.mapDynamicRotate) {
-//            GlStateManager.rotate(MapRender.dynamicRotation, 0f, 0f, 1f)
-//        }
-
         GlStateManager.popMatrix()
     }
 
@@ -209,17 +220,22 @@ object RenderUtils {
 
             // Handle player names
             if (Config.playerHeads == 2 || Config.playerHeads == 1 && mc.thePlayer.heldItem?.itemID.equalsOneOf(
-                    "SPIRIT_LEAP", "INFINITE_SPIRIT_LEAP", "HAUNT_ABILITY"
+                    "SPIRIT_LEAP",
+                    "INFINITE_SPIRIT_LEAP",
+                    "HAUNT_ABILITY"
                 )
             ) {
-//                if (!Config.mapRotate) {
-//                    GlStateManager.rotate(-player.yaw + 180f, 0f, 0f, 1f)
-//                }
-//                GlStateManager.translate(0f, 10f, 0f)
-//                GlStateManager.scale(Config.playerNameScale, Config.playerNameScale, 1f)
-//                mc.fontRendererObj.drawString(
-//                    name, -mc.fontRendererObj.getStringWidth(name) / 2f, 0f, 0xffffff, true
-//                )
+
+                GlStateManager.rotate(-player.yaw + 180f, 0f, 0f, 1f)
+                GlStateManager.translate(0f, 10f, 0f)
+                GlStateManager.scale(Config.playerNameScale, Config.playerNameScale, 1f)
+                mc.fontRendererObj.drawString(
+                    name,
+                    -mc.fontRendererObj.getStringWidth(name) / 2f,
+                    0f,
+                    0xffffff,
+                    true
+                )
             }
 
         } catch (e: Exception) {
@@ -281,7 +297,10 @@ object RenderUtils {
         GlStateManager.popMatrix()
     }
 
-    fun drawFilledAABB(aabb: AxisAlignedBB, color: Color) {
+    fun drawFilledAABB(
+        aabb: AxisAlignedBB,
+        color: Color,
+    ) {
         color.bind()
 
         worldRenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION)
@@ -342,7 +361,10 @@ object RenderUtils {
         tessellator.draw()
     }
 
-    fun drawOutlinedAABB(aabb: AxisAlignedBB, color: Color) {
+    fun drawOutlinedAABB(
+        aabb: AxisAlignedBB,
+        color: Color,
+    ) {
         color.bind()
 
         worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)

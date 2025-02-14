@@ -14,7 +14,7 @@ object PersonalBestConfig {
 
     var pbs: MutableMap<String, MutableList<Double>> = mutableMapOf()
 
-    private val configFile = File(mc.mcDataDir, "config/mageaddons/personal-bests.json").apply {
+    private val configFile = File(mc.mcDataDir, "config/mageaddons/personalBest.json").apply {
         try {
             createNewFile()
         } catch (_: Exception) {

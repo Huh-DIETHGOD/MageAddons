@@ -5,7 +5,7 @@ import mageaddons.config.Config
 import mageaddons.core.map.*
 import mageaddons.features.dungeon.DungeonScan.scan
 import mageaddons.utils.Location.dungeonFloor
-import mageaddons.utils.Utils
+import mageaddons.utils.MessageUtils
 import mageaddons.utils.Utils.equalsOneOf
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
@@ -15,7 +15,6 @@ import kotlin.math.ceil
  * Handles everything related to scanning the dungeon. Running [scan] will update the instance of [Dungeon].
  */
 object DungeonScan {
-
     /**
      * The size of each dungeon room in blocks.
      */
@@ -85,19 +84,19 @@ object DungeonScan {
                 val minSecrets = ceil(maxSecrets * (40 - maxBonus) / 40).toInt()
 
                 val lines = mutableListOf(
-                    "&aScan Finished!",
-                    "&aPuzzles (&c${Dungeon.Info.puzzles.size}&a):",
+                    "§aScan Finished!",
+                    "§aPuzzles (§c${Dungeon.Info.puzzles.size}§a):",
                     Dungeon.Info.puzzles.entries.joinToString(
-                        separator = "\n&b- &d",
-                        prefix = "&b- &d"
+                        separator = "\n§b- §d",
+                        prefix = "§b- §d"
                     ) { it.key.roomDataName },
-                    "&6Trap: &a${Dungeon.Info.trapType}",
-                    "&8Wither Doors: &7${Dungeon.Info.witherDoors - 1}",
-                    "&7Total Crypts: &6${Dungeon.Info.cryptCount}",
-                    "&7Total Secrets: &b${Dungeon.Info.secretCount}",
-                    "&7Minimum Secrets: &e${minSecrets}"
+                    "§6Trap: §a${Dungeon.Info.trapType}",
+                    "§8Wither Doors: §7${Dungeon.Info.witherDoors - 1}",
+                    "§7Total Crypts: §6${Dungeon.Info.cryptCount}",
+                    "§7Total Secrets: §b${Dungeon.Info.secretCount}",
+                    "§7Minimum Secrets: §e${minSecrets}"
                 )
-                Utils.modMessage(lines.joinToString(separator = "\n"))
+                MessageUtils.modMessage(lines.joinToString(separator = "\n"))
             }
             Dungeon.Info.roomCount = Dungeon.Info.dungeonList.filter { it is Room && !it.isSeparator }.size
             hasScanned = true
@@ -165,16 +164,6 @@ object DungeonScan {
                     }
                 }
             }
-        }
-    }
-
-    fun getRoomEntranceCenter(roomX: Int, roomZ: Int): BlockPos? {
-        val room = Dungeon.Info.dungeonList.find { it is Room && it.x == roomX && it.z == roomZ } as? Room
-        return room?.let {
-            val entranceX = it.x + (roomSize / 2)
-            val entranceZ = it.z + (roomSize / 2)
-            BlockPos(entranceX, 69, entranceZ) // 假设入口的y坐标为69
-
         }
     }
 }

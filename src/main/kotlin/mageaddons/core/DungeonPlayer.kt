@@ -9,12 +9,18 @@ import mageaddons.utils.MapUtils
 import mageaddons.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mageaddons.utils.impl.DungeonClass
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.util.ResourceLocation
 
-data class DungeonPlayer(val skin: ResourceLocation) {
-
+data class DungeonPlayer(
+    var skin: ResourceLocation?,
+    var Tname: String?,
+    var clazz: DungeonClass?,
+    val clazzlvl: Int?,
+    var entity: EntityPlayer?
+) {
     var name = ""
 
     /** Minecraft formatting code for the player's name */

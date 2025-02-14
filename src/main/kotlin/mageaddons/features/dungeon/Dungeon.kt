@@ -31,10 +31,13 @@ object Dungeon {
 
     fun onTick() {
         if (!inDungeons) return
+
+        if (shouldSearchMimic()) {
             MimicDetector.findMimic()?.let {
                 if (Config.scanChatInfo) UChat.chat("&7Mimic Room: &c$it")
                 Info.mimicFound = true
             }
+        }
 
         if (!MapUtils.calibrated) {
             MapUtils.calibrated = MapUtils.calibrateMap()
@@ -108,8 +111,8 @@ object Dungeon {
         RunInformation.reset()
     }
 
-//    private fun shouldSearchMimic() =
-//        !Info.mimicFound && Location.dungeonFloor.equalsOneOf(6, 7) && !Config.legitMode
+    private fun shouldSearchMimic() =
+        !Info.mimicFound && Location.dungeonFloor.equalsOneOf(6, 7)
 
     object Info {
         // 6 x 6 room grid, 11 x 11 with connections

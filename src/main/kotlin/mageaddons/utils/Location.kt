@@ -3,6 +3,9 @@ package mageaddons.utils
 import mageaddons.MageAddons.mc
 import mageaddons.config.Config
 import mageaddons.events.ChatEvent
+import mageaddons.features.dungeon.Dungeon
+import mageaddons.utils.impl.Floor
+import net.minecraft.client.network.NetHandlerPlayClient
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.network.FMLNetworkEvent
@@ -10,13 +13,16 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent
 object Location {
 
     private var onHypixel = false
-    var inSkyblock = false
     var island = Island.Unknown
     val inDungeons
         get() = island == Island.Dungeon
     var dungeonFloor = -1
     var masterMode = false
     var inBoss = false
+    var currentDungeon: Floor? = null
+        private set
+    var currentArea: Island = Island.Unknown
+    var isInSkyblock: Boolean = false
 
     private var islandRegex = Regex("^§r§b§l(?:Area|Dungeon): §r§7(.+)§r\$")
 
@@ -36,13 +42,13 @@ object Location {
         tickCount++
         if (tickCount % 20 != 0) return
         if (Config.forceSkyblock) {
-            inSkyblock = true
+            isInSkyblock = true
             island = Island.Dungeon
             dungeonFloor = 7
             return
         }
 
-        inSkyblock = onHypixel && mc.theWorld.scoreboard?.getObjectiveInDisplaySlot(1)?.name == "SBScoreboard"
+        isInSkyblock = onHypixel && mc.theWorld.scoreboard?.getObjectiveInDisplaySlot(1)?.name == "SBScoreboard"
 
         if (island == Island.Unknown) {
             TabList.getTabList().firstNotNullOfOrNull { islandRegex.find(it.second) }
@@ -89,13 +95,35 @@ object Location {
     @SubscribeEvent
     fun onDisconnect(event: FMLNetworkEvent.ClientDisconnectionFromServerEvent) {
         onHypixel = false
-        inSkyblock = false
+        isInSkyblock = false
         island = Island.Unknown
         dungeonFloor = -1
         inBoss = false
+        currentDungeon = null
+    }
+
+    /**
+     * Returns the current area from the tab list info.
+     * If no info can be found, return Island.Unknown.
+     *
+     * @author Aton
+     */
+    private fun getArea(): Island {
+        if (mc.isSingleplayer) return Island.SinglePlayer
+        if (!isInSkyblock) return Island.Unknown
+        val netHandlerPlayClient: NetHandlerPlayClient = mc.thePlayer?.sendQueue ?: return Island.Unknown
+        val list = netHandlerPlayClient.playerInfoMap ?: return Island.Unknown
+
+        val area = list.find {
+            it?.displayName?.unformattedText?.startsWith("Area: ") == true ||
+                    it?.displayName?.unformattedText?.startsWith("Dungeon: ") == true
+        }?.displayName?.formattedText
+
+        return Island.entries.firstOrNull { area?.contains(it.displayName, true) == true } ?: Island.Unknown
     }
 
     enum class Island(val displayName: String) {
+        SinglePlayer("Singleplayer"),
         PrivateIsland("Private Island"),
         Garden("Garden"),
         SpiderDen("Spider's Den"),
@@ -115,5 +143,9 @@ object Location {
         JerryWorkshop("Jerry's Workshop"),
         Kuudra("Kuudra"),
         Unknown("(Unknown)");
+
+        fun isArea(area: Island): Boolean = this == area
+
+        fun isArea(vararg areas: Island): Boolean = this in areas
     }
 }

@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion
 
 object UpdateChecker {
     fun hasUpdate(): Int {
-        val response = APIUtils.fetch("")//TODO: URL
+        val response = APIUtils.fetch("")
         val version = JsonParser().parse(response).toJsonArray()
             ?.get(0)?.toJsonObject()
             ?.getJsonPrimitive("tag_name")?.asString ?: return 0

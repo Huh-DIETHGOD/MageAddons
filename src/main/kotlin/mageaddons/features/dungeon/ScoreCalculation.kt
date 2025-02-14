@@ -10,6 +10,7 @@ import mageaddons.utils.APIUtils
 import mageaddons.utils.Location
 import mageaddons.utils.Utils
 import gg.essential.universal.UChat
+import mageaddons.utils.MessageUtils.modMessage
 import kotlin.math.roundToInt
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -34,7 +35,7 @@ object ScoreCalculation {
                 GuiRenderer.displayTitle(Config.message300, 40)
             }
             if (Config.timeTo300) {
-                Utils.modMessage("§3300 Score§7: §a${RunInformation.timeElapsed.toDuration(DurationUnit.SECONDS)}")
+                modMessage("§3300 Score§7: §a${RunInformation.timeElapsed.toDuration(DurationUnit.SECONDS)}")
             }
         } else if (score >= 270 && !message270) {
             message270 = true

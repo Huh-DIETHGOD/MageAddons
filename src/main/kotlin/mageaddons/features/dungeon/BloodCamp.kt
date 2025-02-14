@@ -1,7 +1,14 @@
-package mageaddons.features.dungeon
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 
-class BloodCamp {
-    fun scanBloodRoomMobs(){
+object BloodCamp {
+    @SubscribeEvent
+    fun scanBloodRoom(){
+        var hasCamped = false
+        var mobNum = 0
+    }
 
+    @SubscribeEvent
+    fun onTick(event:ClientTickEvent){
     }
 }
