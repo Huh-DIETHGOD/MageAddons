@@ -3,8 +3,6 @@ package mageaddons.features.dungeon
 import mageaddons.MageAddons.mc
 import mageaddons.config.Config
 import mageaddons.core.map.*
-import mageaddons.features.dungeon.MapRender.dynamicRotation
-//import mageaddons.features.dungeon.MapRender.legitRender
 import mageaddons.utils.Location.inBoss
 import mageaddons.utils.MapUtils
 import mageaddons.utils.MapUtils.connectorSize

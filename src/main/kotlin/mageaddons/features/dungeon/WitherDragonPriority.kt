@@ -1,7 +1,7 @@
 package mageaddons.features.dungeon
 
 import mageaddons.config.Config
-import mageaddons.features.dungeon.SplitPower.easyPower
+import mageaddons.features.dungeon.SplitManager.easyPower
 import mageaddons.features.dungeon.WitherDragonManager.enabled
 import mageaddons.features.dungeon.impl.DragonEnum
 import mageaddons.utils.DungeonUtil

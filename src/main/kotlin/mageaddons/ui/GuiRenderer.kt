@@ -1,6 +1,7 @@
 package mageaddons.ui
 
 import mageaddons.MageAddons.mc
+import mageaddons.utils.Color
 import mageaddons.utils.Location
 import mageaddons.utils.RenderUtils
 import net.minecraft.client.gui.ScaledResolution
@@ -11,7 +12,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 object GuiRenderer {
     val elements = mutableListOf(
         MapElement(),
-        ScoreElement()
+        ScoreElement(),
+        BlessingElement()
     )
     private var displayTitle = ""
     private var titleTicks = 0
@@ -51,7 +53,7 @@ object GuiRenderer {
                 x = sr.scaledWidth / 2f,
                 y = sr.scaledHeight / 4f,
                 scale = 4.0,
-                color = 0xFF5555,
+                color = Color.WHITE,
                 center = true
             )
         }

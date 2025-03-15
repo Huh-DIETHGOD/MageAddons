@@ -2,9 +2,11 @@ package mageaddons.utils
 
 import mageaddons.MageAddons.mc
 import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.entity.Entity
 import net.minecraft.inventory.ContainerChest
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraftforge.common.util.Constants
 
 
 /**
@@ -83,6 +85,8 @@ val EntityPlayerSP.usingEtherWarp: Boolean
         return isSneaking && item.extraAttributes?.getBoolean("ethermerge") == true
     }
 
+fun getSkullValue(entity: Entity?): String? = entity?.inventory?.get(4)?.skullTexture
+
 /**
  * Returns the ID of held item
  */
@@ -129,4 +133,13 @@ fun getItemIndexInContainerChestByLore(container: ContainerChest, lore: String, 
     return container.inventorySlots.subList(subList.first, subList.last + 1).firstOrNull {
         it.stack?.lore?.contains(lore) == true
     }?.slotIndex
+}
+
+val ItemStack.skullTexture: String? get() {
+    return this.tagCompound
+        ?.getCompoundTag("SkullOwner")
+        ?.getCompoundTag("Properties")
+        ?.getTagList("textures", Constants.NBT.TAG_COMPOUND)
+        ?.getCompoundTagAt(0)
+        ?.getString("Value")
 }

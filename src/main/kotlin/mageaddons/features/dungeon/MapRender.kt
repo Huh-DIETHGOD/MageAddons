@@ -226,7 +226,7 @@ object MapRender {
     fun renderPlayerHeads() {
         try {
             if (Dungeon.dungeonTeammates.isEmpty()) {
-                RenderUtils.drawPlayerHead(mc.thePlayer.name, DungeonPlayer(mc.thePlayer.locationSkin, null, null, null, null).apply {
+                RenderUtils.drawPlayerHead(mc.thePlayer.name, DungeonPlayer(mc.thePlayer.locationSkin).apply {
                     yaw = mc.thePlayer.rotationYaw
                 })
             } else {

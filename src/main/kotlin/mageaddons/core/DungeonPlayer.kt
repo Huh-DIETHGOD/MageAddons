@@ -15,13 +15,12 @@ import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.util.ResourceLocation
 
 data class DungeonPlayer(
-    var skin: ResourceLocation?,
-    var Tname: String?,
-    var clazz: DungeonClass?,
-    val clazzlvl: Int?,
-    var entity: EntityPlayer?
+    var skin: ResourceLocation?
 ) {
     var name = ""
+
+    // default mage
+    var clazz: DungeonClass? = DungeonClass.Mage
 
     /** Minecraft formatting code for the player's name */
     var colorPrefix = 'f'

@@ -34,7 +34,7 @@ object MessageUtils {
      * Directly send a message to public chat
      */
     fun sendChatMessage(message: Any) {
-        UChat.chat(message.toString())
+        UChat.say(message.toString())
     }
 
     /**
@@ -51,7 +51,7 @@ object MessageUtils {
      */
     fun devMessage(message: String) {
         if (isDevMod) {
-            sendChatMessage("§b§l<§f${ MOD_NAME } §b§lDevMod>§r $message")
+            sendChatMessage("§a§l<§b${ MOD_NAME } §3§lDevMod§a>§r $message")
         }
     }
 
@@ -59,6 +59,6 @@ object MessageUtils {
      *  Sends a PARTY message to the chat with the prefix
      */
     fun partyMessage(message: String) {
-        sendCommand("pc $message")
+        sendCommand("pc MageAddons >> $message")
     }
 }

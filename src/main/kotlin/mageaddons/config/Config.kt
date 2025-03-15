@@ -55,13 +55,23 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var scoreElementEnabled = false
 
     @Property(
+        name = "Blood Camp Helper",
+        type = PropertyType.SWITCH,
+        description = "Helps blood camp and announcements",
+        category = "Dungeon",
+        subcategory = "General"
+    )
+    var bloodCampHelper = false
+
+    @Property(
         name = "Show Personal Best",
         type = PropertyType.SWITCH,
         description = "Shows personal best",
         category = "Dungeon",
         subcategory = "General",
+        hidden = true
     )
-    var personalBestEnabled = true
+    var personalBestEnabled = false
 
     @Property(
         name = "Wither Door ESP",
@@ -90,6 +100,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
         category = "Dungeon",
         subcategory = "General",
         placeholder = "Reset",
+        hidden = true
     )
     fun resetMapLocation() {
         mapX = 10
@@ -406,6 +417,78 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
         subcategory = "P5"
     )
     var dragonBox = false
+// Dungeon Blessings
+    @Property(
+        name = "Blessing Display",
+        description = "Display Blessings on screen.",
+        type = PropertyType.SELECTOR,
+        category = "Dungeon",
+        subcategory = "Blessing",
+    )
+    var blessingDisplay = false
+
+    @Property(
+        name = "Blessing Display",
+        description = "Display Power on screen.",
+        type = PropertyType.SWITCH,
+        category = "Dungeon",
+        subcategory = "Blessing"
+    )
+    var displayPower = true
+
+    @Property(
+        name = "Blessing Display",
+        description = "Display Time on screen.",
+        type = PropertyType.SWITCH,
+        category = "Dungeon",
+        subcategory = "Blessing"
+    )
+    var displayTime = true
+
+    @Property(
+        name = "Blessing Display",
+        description = "Display Stone on screen.",
+        type = PropertyType.SWITCH,
+        category = "Dungeon",
+        subcategory = "Blessing"
+    )
+    var displayStone = false
+
+    @Property(
+        name = "Blessing Display",
+        description = "Display Life on screen.",
+        type = PropertyType.SWITCH,
+        category = "Dungeon",
+        subcategory = "Blessing"
+    )
+    var displayLife = false
+
+    @Property(
+        name = "Blessing Display",
+        description = "Display Wisdom on screen.",
+        type = PropertyType.SWITCH,
+        category = "Dungeon",
+        subcategory = "Blessing"
+    )
+    var displayWisdom = false
+
+    @Property(
+        name = "Blessing Calc X",
+        type = PropertyType.NUMBER,
+        category = "Dungeon",
+        subcategory = "Blessing",
+        hidden = true,
+    )
+    var blessingX = 10
+
+    @Property(
+        name = "Blessing Calc Y",
+        type = PropertyType.NUMBER,
+        category = "Dungeon",
+        subcategory = "Blessing",
+        hidden = true,
+    )
+    var blessingY = 10
 
 // Dungeon Color
     @Property(
@@ -870,6 +953,13 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     )
     var renderBeta = false
 
+    @Property(
+        name = "Force Blessing Display",
+        type = PropertyType.SWITCH,
+        category = "Debug",
+    )
+    var forceBlessingDisplay = false
+
 // Combat RagAxe
     @Property(
         name = "RagAxe Tracker",
@@ -890,6 +980,14 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var ragAxeAnnouncer = false
 
     init {
+        arrayOf(
+            "displayPower",
+            "displayTime",
+            "displayStone",
+            "displayLife",
+            "displayWisdom"
+        ).forEach { propertyName -> addDependency(propertyName, "blessingDisplay") }
+
         initialize()
         setCategoryDescription(
             "General",
@@ -913,8 +1011,10 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
             listOf(
                 "General",
                 "Hot Key",
+                "P5",
                 "Message",
                 "Map",
+                "Blessing",
                 "Map Render",
                 "Color",
                 "Score",

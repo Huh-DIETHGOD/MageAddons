@@ -1,8 +1,14 @@
 package mageaddons.utils
 
+import mageaddons.MageAddons
 import mageaddons.MageAddons.logger
 import mageaddons.MageAddons.mc
+import mageaddons.utils.MessageUtils.modMessage
+import net.minecraft.event.ClickEvent
+import net.minecraft.event.HoverEvent
 import net.minecraft.item.ItemStack
+import net.minecraft.util.ChatComponentText
+import net.minecraft.util.ChatStyle
 import net.minecraft.util.StringUtils
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.fml.common.eventhandler.Event
@@ -39,14 +45,18 @@ fun Any?.equalsOneOf(vararg options: Any?): Boolean = options.any { this == it }
 
 fun String?.matchesOneOf(vararg options: Regex): Boolean = options.any { it.matches(this ?: "") }
 
+
 /**
  * Posts an event to the event bus and catches any errors.
  * @author Skytils
  */
-fun Event.postAndCatch(): Boolean =
-    runCatching {
+fun Event.postAndCatch(): Boolean {
+    return runCatching {
         MinecraftForge.EVENT_BUS.post(this)
     }.onFailure {
         it.printStackTrace()
         logger.error("An error occurred", it)
-    }.getOrDefault(isCanceled)
+        val style = ChatStyle()
+        style.chatHoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, ChatComponentText("§6Click to copy the error to your clipboard."))
+        modMessage("${MageAddons.MOD_VERSION} Caught an ${it::class.simpleName ?: "error"} at ${this::class.simpleName}. §cPlease click this message to copy and send it in the Odin discord!",)}.getOrDefault(isCanceled)
+}

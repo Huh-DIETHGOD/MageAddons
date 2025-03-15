@@ -36,7 +36,7 @@ class MageAddonsCommands : CommandBase() {
             "help" -> {
                 UChat.chat(
                     """
-                        #§b§l<§MageAddons Commands§b§l>
+                        #§a§l<§bMageAddons Commands§a§l>
                         #  §b/mageaddons §9> §3Opens the main mod GUI. §7(Alias: fm, fmap)
                         #  §b/§fmageaddons §bscan §9> §3Rescans the map.
                         #  §b/§fmageaddons §broomdata §9> §3Copies current room data or room core to clipboard.
@@ -62,6 +62,13 @@ class MageAddonsCommands : CommandBase() {
             }
             "personbest" -> {
 
+            }
+            "colorCheck" -> {
+                val msg = mutableListOf(
+                    "§11; §22; §33; §44; §55; §66; §77; §88; §99; §a10;",
+                )
+
+                modMessage(msg.joinToString())
             }
             // Unknown command help message
             else -> modMessage("§cUnknown command. Use §b/§fmageaddons help §cfor a list of commands.")

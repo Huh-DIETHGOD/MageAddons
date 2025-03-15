@@ -20,14 +20,14 @@ object RagAxe : ModuleFactory(
     @SubscribeEvent
     fun onSoundReceived(event: PlaySoundEvent) {
         if (event.name != "mob.wolf.howl" || !isHolding("RAGNAROCK_AXE")) return
-        if (toggle) alert("§aCasted Rag Axe", 1)
+        if (toggle) alert("§bCasted Rag Axe", 20)
         val strengthGain = ((mc.thePlayer?.heldItem?.getSBStrength ?: return) * 1.5).toInt()
         if (toggle) modMessage("Gained strength: $strengthGain")
-        if (shouldAnnounce) partyMessage("Gained strength from rag axe: $strengthGain")
+        if (shouldAnnounce) partyMessage("Gained strength from RagAxe: $strengthGain")
     }
 
     @SubscribeEvent
     fun onChatReceived(event: ServerChatEvent) {
-        if(event.message.contains(Regex("Ragnarock was cancelled due to (?:being hit|taking damage)!"))) alert("§cRag Axe Cancelled", 1)
+        if(event.message.contains(Regex("Ragnarock was cancelled due to (?:being hit|taking damage)!"))) alert("§cRag Axe Cancelled",20)
     }
 }

@@ -16,7 +16,6 @@ import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
 object Dungeon {
-
     val dungeonTeammates = mutableMapOf<String, DungeonPlayer>()
     val espDoors = mutableListOf<Door>()
 

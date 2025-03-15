@@ -34,7 +34,7 @@ object PersonalBestConfig {
                 println("Successfully loaded pb config $pbs")
             }
         } catch (e: Exception) {
-            println("Odin: Error parsing pbs.")
+            println("MageAddons: Error parsing pbs.")
             println(e.message)
             logger.error("Error parsing pbs.", e)
         }

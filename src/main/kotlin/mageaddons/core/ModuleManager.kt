@@ -1,11 +1,11 @@
 package mageaddons.core
 
-import mageaddons.events.PacketEvent
+import BloodCamp
 import mageaddons.features.combat.RagAxe
+import mageaddons.features.dungeon.SplitManager
+import mageaddons.features.dungeon.WitherDragonManager
 import mageaddons.features.testUse.TestOnly
 import net.minecraft.network.Packet
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientCustomPacketEvent
 
 object ModuleManager{
     val modules: ArrayList<ModuleFactory> = arrayListOf(
@@ -13,7 +13,7 @@ object ModuleManager{
         RagAxe,
 
         //dungeon
-
+        WitherDragonManager, SplitManager,BloodCamp,
         //QOL
 
         //TEST

@@ -11,9 +11,6 @@ import mageaddons.utils.impl.Floor
 import mageaddons.utils.impl.M7Phases
 
 object DungeonUtil {
-    val inDungeons: Boolean
-        get() = Location.currentArea.isArea(Location.Island.Dungeon)
-
     val floorNumber: Int
         get() = dungeonFloor
 
@@ -24,7 +21,7 @@ object DungeonUtil {
         get() = ArrayList(Dungeon.dungeonTeammates.values) ?: ArrayList()
 
     val currentDungeonPlayer: DungeonPlayer
-        get() = dungeonTeammates.find { it.name == mc.thePlayer?.name } ?: DungeonPlayer(Tname = mc.thePlayer?.name ?: "Unknown",clazz = DungeonClass.Unknown, clazzlvl = 0, skin = null, entity = mc.thePlayer)
+        get() = dungeonTeammates.find { it.name == mc.thePlayer?.name } ?: DungeonPlayer(mc.thePlayer.locationSkin)
 
 
     /**
@@ -42,7 +39,7 @@ object DungeonUtil {
      *
      * @return The current phase of floor 7 boss, or `null` if the player is not in the boss room.
      */
-    fun getF7Phase(): M7Phases {
+    fun getM7Phase(): M7Phases {
         if ((!isFloor(7) || !inBoss) && !Location.currentArea.isArea(Location.Island.SinglePlayer)) return M7Phases.Unknown
 
         return when {

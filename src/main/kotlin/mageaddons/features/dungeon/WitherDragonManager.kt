@@ -3,7 +3,7 @@ package mageaddons.features.dungeon
 import mageaddons.config.Config
 import mageaddons.core.ModuleFactory
 import mageaddons.features.dungeon.impl.DragonEnum
-import mageaddons.utils.DungeonUtil.getF7Phase
+import mageaddons.utils.DungeonUtil.getM7Phase
 import mageaddons.utils.MessageUtils.modMessage
 import mageaddons.utils.impl.M7Phases
 import net.minecraftforge.client.event.sound.PlaySoundEvent
@@ -23,7 +23,7 @@ object WitherDragonManager: ModuleFactory(
 
     @SubscribeEvent
     fun onPacket(event: PlaySoundEvent){
-        if(getF7Phase() !== M7Phases.P5) return
+        if(getM7Phase() !== M7Phases.P5) return
         if (event.name != "random.successful_hit" || priorityDragon == DragonEnum.None) return
         if (priorityDragon.entity?.isEntityAlive == true && currentTick - priorityDragon.spawnedTime < priorityDragon.skipKillTime) arrowsHit++
 

@@ -1,14 +1,15 @@
 package mageaddons.utils
 
+import gg.essential.elementa.dsl.toConstraint
 import mageaddons.MageAddons.mc
 import mageaddons.config.Config
 import mageaddons.core.DungeonPlayer
 import mageaddons.core.map.RoomState
 import mageaddons.features.dungeon.DungeonScan
-import mageaddons.features.dungeon.MapRender
 import mageaddons.utils.Utils.equalsOneOf
 import mageaddons.utils.Utils.itemID
 import gg.essential.elementa.utils.withAlpha
+import mageaddons.utils.RenderUtils.worldRenderer
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager
@@ -19,7 +20,9 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
-import net.minecraftforge.client.event.RenderGameOverlayEvent
+import net.minecraft.util.Vec3
+import net.minecraftforge.client.event.RenderWorldLastEvent
+import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.GL_LINE_STRIP
@@ -29,8 +32,8 @@ import kotlin.math.roundToInt
 
 object RenderUtils {
 
-    private val tessellator: Tessellator = Tessellator.getInstance()
-    private val worldRenderer: WorldRenderer = tessellator.worldRenderer
+    val tessellator: Tessellator = Tessellator.getInstance()
+    val worldRenderer: WorldRenderer = tessellator.worldRenderer
     val neuCheckmarks = CheckmarkSet(10, "neu")
     val defaultCheckmarks = CheckmarkSet(16, "default")
     val legacyCheckmarks = CheckmarkSet(8, "legacy")
@@ -270,7 +273,7 @@ object RenderUtils {
         x: Float,
         y: Float,
         scale: Double = 1.0,
-        color: Int = 0xFFFFFF,
+        color: mageaddons.utils.Color = mageaddons.utils.Color.WHITE,
         shadow: Boolean = true,
         center: Boolean = false
     ) {
@@ -289,12 +292,88 @@ object RenderUtils {
                 it,
                 xOffset,
                 0f,
-                color,
+                color.rgba,
                 shadow
             )
         }
         GlStateManager.disableBlend()
         GlStateManager.popMatrix()
+    }
+
+    /**
+     * @author https://github.com/odtheking/Odin
+     */
+    var partialTicks = 0f
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    fun onRenderWorld(event: RenderWorldLastEvent) {
+        this.partialTicks = event.partialTicks
+    }
+    /**
+     * Gets the rendered x-coordinate of an entity based on its last tick and current tick positions.
+     *
+     * @receiver The entity for which to retrieve the rendered x-coordinate.
+     * @return The rendered x-coordinate.
+     */
+    val Entity.renderX: Double
+        get() = lastTickPosX + (posX - lastTickPosX) * partialTicks
+
+    /**
+     * Gets the rendered y-coordinate of an entity based on its last tick and current tick positions.
+     *
+     * @receiver The entity for which to retrieve the rendered y-coordinate.
+     * @return The rendered y-coordinate.
+     */
+    val Entity.renderY: Double
+        get() = lastTickPosY + (posY - lastTickPosY) * partialTicks
+
+    /**
+     * Gets the rendered z-coordinate of an entity based on its last tick and current tick positions.
+     *
+     * @receiver The entity for which to retrieve the rendered z-coordinate.
+     * @return The rendered z-coordinate.
+     */
+    val Entity.renderZ: Double
+        get() = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks
+
+    /**
+     * Gets the rendered position of an entity as a `Vec3`.
+     *
+     * @receiver The entity for which to retrieve the rendered position.
+     * @return The rendered position as a `Vec3`.
+     */
+    val Entity.renderVec: Vec3
+        get() = Vec3(renderX, renderY, renderZ)
+    fun AxisAlignedBB.outlineBounds(): AxisAlignedBB =
+        expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
+
+    private fun addVertexesForOutlinedBox(aabb: AxisAlignedBB) {
+        val minX = aabb.minX
+        val minY = aabb.minY
+        val minZ = aabb.minZ
+        val maxX = aabb.maxX
+        val maxY = aabb.maxY
+        val maxZ = aabb.maxZ
+
+        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        worldRenderer.pos(minX, minY, minZ).endVertex()
+        worldRenderer.pos(minX, minY, maxZ).endVertex()
+        worldRenderer.pos(maxX, minY, maxZ).endVertex()
+        worldRenderer.pos(maxX, minY, minZ).endVertex()
+        worldRenderer.pos(minX, minY, minZ).endVertex()
+
+        worldRenderer.pos(minX, maxY, minZ).endVertex()
+        worldRenderer.pos(minX, maxY, maxZ).endVertex()
+        worldRenderer.pos(maxX, maxY, maxZ).endVertex()
+        worldRenderer.pos(maxX, maxY, minZ).endVertex()
+        worldRenderer.pos(minX, maxY, minZ).endVertex()
+
+        worldRenderer.pos(minX, maxY, maxZ).endVertex()
+        worldRenderer.pos(minX, minY, maxZ).endVertex()
+        worldRenderer.pos(maxX, minY, maxZ).endVertex()
+        worldRenderer.pos(maxX, maxY, maxZ).endVertex()
+        worldRenderer.pos(maxX, maxY, minZ).endVertex()
+        worldRenderer.pos(maxX, minY, minZ).endVertex()
+
     }
 
     fun drawFilledAABB(
@@ -361,6 +440,11 @@ object RenderUtils {
         tessellator.draw()
     }
 
+    fun depth(depth: Boolean) {
+        if (depth) GlStateManager.enableDepth() else GlStateManager.disableDepth()
+        GlStateManager.depthMask(depth)
+    }
+
     fun drawOutlinedAABB(
         aabb: AxisAlignedBB,
         color: Color,
@@ -389,5 +473,10 @@ object RenderUtils {
         worldRenderer.pos(aabb.maxX, aabb.minY, aabb.minZ).endVertex()
 
         tessellator.draw()
+    }
+
+    private fun resetDepth() {
+        GlStateManager.enableDepth()
+        GlStateManager.depthMask(true)
     }
 }
