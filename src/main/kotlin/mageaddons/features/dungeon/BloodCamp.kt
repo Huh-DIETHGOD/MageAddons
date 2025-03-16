@@ -1,5 +1,3 @@
-import kotlinx.coroutines.DefaultExecutor.thread
-import mageaddons.config.Config
 import mageaddons.core.ModuleFactory
 import mageaddons.core.map.RoomType
 import mageaddons.events.EntityLeaveWorldEvent
