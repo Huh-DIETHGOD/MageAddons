@@ -1,3 +1,4 @@
+import kotlinx.coroutines.DefaultExecutor.thread
 import mageaddons.config.Config
 import mageaddons.core.ModuleFactory
 import mageaddons.core.map.RoomType
@@ -44,13 +45,17 @@ object BloodCamp: ModuleFactory(
     fun onChat(event: ClientChatReceivedEvent){
         if (!inDungeons || inBoss || !toggle) return
         if (event.equals(Regex("^\\[BOSS] The Watcher: Let's see how you can handle this.$"))) !firstSpawns
-
-
+        devMessage("Blood Camp start")
+        val currentTime = System.nanoTime()
+        var timeToCamp: Double = 0.00
+        while (!hasCamped) {
+            timeToCamp = (System.nanoTime() - currentTime) / 1_000_000_000.0 // 转换为秒
+            Thread.sleep(10) // 每10毫秒更新一次
+        }
         if (event.message.equals("[BOSS] The Watcher: You have proven yourself. You may pass.")){
             hasCamped = true
-            devMessage("Blood Camp start")
-            partyMessage("Blood Done!")
-            alert("§bBlood Done!")
+            partyMessage("Blood Done! Took $timeToCamp seconds to clear!")
+            alert("§bBlood Done!", 10)
         }
     }
 
