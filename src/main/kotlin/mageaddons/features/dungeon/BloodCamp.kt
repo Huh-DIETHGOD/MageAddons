@@ -41,7 +41,7 @@ object BloodCamp: ModuleFactory(
 
 
     @SubscribeEvent
-    fun onChat(event: ClientChatReceivedEvent){
+    fun onChat(event: ServerChatEvent){
         if (!inDungeons || inBoss || !toggle) return
         if (event.equals(Regex("^\\[BOSS] The Watcher: Let's see how you can handle this.$"))) !firstSpawns
         devMessage("Blood Camp start")
@@ -101,53 +101,6 @@ object BloodCamp: ModuleFactory(
             it.speedVectors = speedVectors
         }
     }
-
-//    @SubscribeEvent
-//    fun onRenderWorld(event: RenderWorldLastEvent) {
-//        if (toggle)
-//            currentWatcherEntity?.let { drawBox(it.renderVec.toAABB(), color = java.awt.Color.RED, 1f) }
-//
-//        renderDataMap.forEach { (entity, renderData) ->
-//            val (_, started, firstSpawn) = entityDataMap[entity]?.takeUnless { entity.isDead } ?: return@forEach
-//
-//            val (currVector, endVector, endVecUpdated, speedVectors) = renderData
-//            val endVectorUpdated = min(currentTickTime - endVecUpdated, 100)
-//
-//            val endPoint = calcEndVector(endVector, renderData.lastEndVector, endVectorUpdated / 100f)
-//
-//            val pingPoint = Vec3(
-//                entity.posX + speedVectors.xCoord * averagePing,
-//                entity.posY + speedVectors.yCoord * averagePing,
-//                entity.posZ + speedVectors.zCoord * averagePing
-//            )
-//
-//            renderData.lastEndPoint = endPoint
-//            renderData.lastPingPoint = pingPoint
-//
-//            val boxOffset = Vec3(boxSize / -2, 1.5, boxSize / -2)
-//            val pingAABB = AxisAlignedBB(boxSize,boxSize,boxSize, 0.0, 0.0, 0.0).offset(boxOffset + calcEndVector(pingPoint, renderData.lastPingPoint, event.partialTicks, !interpolation))
-//            val endAABB = AxisAlignedBB(boxSize,boxSize,boxSize, 0.0, 0.0, 0.0).offset(boxOffset + calcEndVector(endPoint, renderData.lastEndPoint, event.partialTicks, !interpolation))
-//
-//            val time = getTime(firstSpawn,  currentTickTime - started)
-//
-//            if (averagePing < time) {
-//                drawBox(pingAABB, mboxColor, fillAlpha = 0f, outlineAlpha = mboxColor.alpha, depth = true)
-//                drawBox(endAABB, pboxColor, fillAlpha = 0f, outlineAlpha = pboxColor.alpha, depth = true)
-//            } else drawBox(endAABB, fboxColor, fillAlpha = 0f, outlineAlpha = fboxColor.alpha, depth = true)
-//
-//            if (drawLine)
-//                draw3DLine(listOf(currVector.addVec(y = 2.0), endPoint.addVec(y = 2.0)), color = Color.RED, depth = true)
-//
-//            val timeDisplay = (time.toFloat() - offset) / 1000
-//            val colorTime = when {
-//                timeDisplay > 1.5 -> Color.GREEN
-//                timeDisplay in 0.5..1.5 -> Color.ORANGE
-//                timeDisplay in 0.0..0.5 -> Color.RED
-//                else -> Color.BLUE
-//            }
-//            if (drawTime) drawStringInWorld("${String.format(Locale.US, "%.2f", timeDisplay)}s", endPoint.addVec(y = 2), colorTime, depth = true, scale = 0.03f)
-//        }
-//    }
 
     @SubscribeEvent
     fun onPostMetadata(event: PostEntityMetadata){
