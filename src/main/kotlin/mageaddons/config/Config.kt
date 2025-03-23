@@ -428,7 +428,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var blessingDisplay = false
 
     @Property(
-        name = "Blessing Display",
+        name = "Display Power",
         description = "Display Power on screen.",
         type = PropertyType.SWITCH,
         category = "Dungeon",
@@ -437,7 +437,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var displayPower = true
 
     @Property(
-        name = "Blessing Display",
+        name = "Display Time",
         description = "Display Time on screen.",
         type = PropertyType.SWITCH,
         category = "Dungeon",
@@ -446,7 +446,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var displayTime = true
 
     @Property(
-        name = "Blessing Display",
+        name = "Display Stone",
         description = "Display Stone on screen.",
         type = PropertyType.SWITCH,
         category = "Dungeon",
@@ -455,7 +455,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var displayStone = false
 
     @Property(
-        name = "Blessing Display",
+        name = "Display Life",
         description = "Display Life on screen.",
         type = PropertyType.SWITCH,
         category = "Dungeon",
@@ -464,7 +464,7 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var displayLife = false
 
     @Property(
-        name = "Blessing Display",
+        name = "Display Wisdom",
         description = "Display Wisdom on screen.",
         type = PropertyType.SWITCH,
         category = "Dungeon",
@@ -980,13 +980,13 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     var ragAxeAnnouncer = false
 
     init {
-        arrayOf(
-            "displayPower",
-            "displayTime",
-            "displayStone",
-            "displayLife",
-            "displayWisdom"
-        ).forEach { propertyName -> addDependency(propertyName, "blessingDisplay") }
+//        arrayOf(
+//            "displayPower",
+//            "displayTime",
+//            "displayStone",
+//            "displayLife",
+//            "displayWisdom"
+//        ).forEach { propertyName -> addDependency(propertyName, "blessingDisplay") }
 
         initialize()
         setCategoryDescription(

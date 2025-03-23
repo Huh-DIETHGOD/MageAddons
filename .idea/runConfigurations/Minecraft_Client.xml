@@ -1,15 +1,15 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="Application" name="Minecraft Client" type="Application">
-    <option name="ALTERNATIVE_JRE_PATH" value="1.8"/>
-    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true"/>
-    <option name="MAIN_CLASS_NAME" value="net.fabricmc.devlaunchinjector.Main"/>
-    <module name="MageAddons.main"/>
-    <option name="PROGRAM_PARAMETERS" value="--tweakClass gg.essential.loader.stage0.EssentialSetupTweaker --mixin mixins.mageaddons.json"/>
-    <shortenClasspath name="NONE"/>
-    <option name="VM_PARAMETERS" value="-Dfabric.dli.config=F:\File\JetBrains\Projects\IdeaProjects\MageAddons\.gradle\loom-cache\launch.cfg -Dfabric.dli.env=client -Dmixin.debug.verbose=true -Dasmhelper.verbose=true -Dfabric.dli.main=net.minecraft.launchwrapper.Launch"/>
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run/"/>
+  <configuration default="false" name="Minecraft Client" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="1.8" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="net.minecraft.launchwrapper.Launch" />
+    <module name="MageAddons.main" />
+    <option name="PROGRAM_PARAMETERS" value="--tweakClass gg.essential.loader.stage0.EssentialSetupTweaker --mixin mixins.mageaddons.json" />
+    <shortenClasspath name="NONE" />
+    <option name="VM_PARAMETERS" value="-Dfabric.dli.config=F:\File\JetBrains\Projects\IdeaProjects\MageAddons\.gradle\loom-cache\launch.cfg -Dfabric.dli.env=client -Dmixin.debug.verbose=true -Dasmhelper.verbose=true -Dfabric.dli.main=net.minecraft.launchwrapper.Launch" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run/" />
     <method v="2">
-      <option enabled="true" name="Make"/>
+      <option name="Make" enabled="true" />
     </method>
-  <classpathModifications/></configuration>
+  </configuration>
 </component>
