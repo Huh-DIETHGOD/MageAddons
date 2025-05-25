@@ -979,16 +979,6 @@ object Config : Vigilant(File("./config/mageaddons/config.toml"), "Mage Addons",
     )
     var ragAxeAnnouncer = false
 
-// Combat CustomWardrobe
-    @Property(
-        name = "Custom Wardrobe",
-        description = "Allows you to fast swap armor while using custom wardrobe.Default key: X",
-        type = PropertyType.SWITCH,
-        category = "Combat",
-        subcategory = "CustomWardrobe",
-    )
-    var customWardrobe = false
-
     init {
 //        arrayOf(
 //            "displayPower",

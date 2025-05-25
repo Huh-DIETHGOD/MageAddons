@@ -54,7 +54,7 @@ object MageAddons {
     val scope = CoroutineScope(EmptyCoroutineContext)
     val logger: Logger = LogManager.getLogger("MageAddons")
 
-    var equipmentKey = KeyBinding("/eq", transformKey(Config.equipmentHotKey), "Mage Addons")
+//    var equipmentKey = KeyBinding("/eq", transformKey(Config.equipmentHotKey), "Mage Addons")
 
 
     @Mod.EventHandler
@@ -80,9 +80,8 @@ object MageAddons {
             WitherDoorESP
         ).forEach(MinecraftForge.EVENT_BUS::register)
         RenderUtils
-        listOf(
-            equipmentKey,
-        ).forEach(ClientRegistry::registerKeyBinding)
+//        listOf(
+//        ).forEach(ClientRegistry::registerKeyBinding)
     }
 
     @Mod.EventHandler

@@ -5,12 +5,13 @@ import mageaddons.core.ModuleFactory
 import mageaddons.utils.MessageUtils
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.InputEvent
+import org.lwjgl.input.Keyboard
 
-object CustomWardrobe : ModuleFactory(
-    name = "Custom Wardrobe",
-    toggle = Config.wardrobeHotKeyEnabled
+object CustomEquipment : ModuleFactory(
+    name = "Custom Equipment",
+    toggle = Config.equipmentHotKeyEnabled
 ) {
-    private var key = Config.wardrobeHotKey
+    private var key = Config.equipmentHotKey
     @SubscribeEvent
     fun onKeyPress(event: InputEvent.KeyInputEvent){
         if(!toggle) return
