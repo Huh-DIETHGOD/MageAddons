@@ -1,6 +1,7 @@
 package mageaddons.core
 
 import BloodCamp
+import mageaddons.features.combat.CustomWardrobe
 import mageaddons.features.combat.RagAxe
 import mageaddons.features.dungeon.SplitManager
 import mageaddons.features.dungeon.WitherDragonManager
@@ -10,7 +11,7 @@ import net.minecraft.network.Packet
 object ModuleManager{
     val modules: ArrayList<ModuleFactory> = arrayListOf(
         //combat
-        RagAxe,
+        RagAxe, CustomWardrobe,
 
         //dungeon
         WitherDragonManager, SplitManager,BloodCamp,

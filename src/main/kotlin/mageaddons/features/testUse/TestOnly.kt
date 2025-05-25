@@ -18,7 +18,7 @@ object TestOnly: ModuleFactory(
         if (Config.testCommandEnabled && event.message.contains(MageAddons.mc.thePlayer.name)) {
             modMessage("test success")
             devMessage("§b§ltest success")
-            alert("Trst")
+            alert("Test")
         }
     }
 }

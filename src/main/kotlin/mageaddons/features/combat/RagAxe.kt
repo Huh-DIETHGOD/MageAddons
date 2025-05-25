@@ -16,7 +16,7 @@ object RagAxe : ModuleFactory(
     name = "RagAxe Tracker",
     toggle = Config.ragAxe
 ) {
-    private val shouldAnnounce = Config.ragAxeAnnouncer
+    private var shouldAnnounce = Config.ragAxeAnnouncer
     @SubscribeEvent
     fun onSoundReceived(event: PlaySoundEvent) {
         if (event.name != "mob.wolf.howl" || !isHolding("RAGNAROCK_AXE")) return

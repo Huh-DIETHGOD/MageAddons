@@ -55,7 +55,7 @@ object MageAddons {
     val logger: Logger = LogManager.getLogger("MageAddons")
 
     var equipmentKey = KeyBinding("/eq", transformKey(Config.equipmentHotKey), "Mage Addons")
-    var wardrobeKey = KeyBinding("/wd", transformKey(Config.wardrobeHotKey), "Mage Addons")
+
 
     @Mod.EventHandler
     fun preInit(event: FMLPreInitializationEvent) {
@@ -81,7 +81,6 @@ object MageAddons {
         ).forEach(MinecraftForge.EVENT_BUS::register)
         RenderUtils
         listOf(
-            wardrobeKey,
             equipmentKey,
         ).forEach(ClientRegistry::registerKeyBinding)
     }
@@ -116,16 +115,6 @@ object MageAddons {
         Location.onTick()
 
         mc.mcProfiler.endSection()
-    }
-
-    @SubscribeEvent
-    fun onKey(event: InputEvent.KeyInputEvent) {
-        while (equipmentKey.isPressed) {
-            if (Config.equipmentHotKeyEnabled) UChat.say("/equipment")
-        }
-        while (wardrobeKey.isPressed && Config.wardrobeHotKeyEnabled) {
-            if (Config.wardrobeHotKeyEnabled) UChat.say("/wardrobe")
-        }
     }
 
     @SubscribeEvent
