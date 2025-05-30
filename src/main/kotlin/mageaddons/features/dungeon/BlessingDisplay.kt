@@ -1,14 +1,14 @@
 package mageaddons.features.dungeon
 
+import mageaddons.MageAddons
 import mageaddons.config.Config
 import mageaddons.core.ModuleFactory
 import mageaddons.events.TabListEvent
-import mageaddons.utils.Color
+import mageaddons.utils.*
+import mageaddons.utils.Location.inDungeons
 import mageaddons.utils.PlayerUtils.mcText
-import mageaddons.utils.TabList
 import mageaddons.utils.impl.Blessing
-import mageaddons.utils.noControlCodes
-import mageaddons.utils.romanToInt
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.network.play.server.S47PacketPlayerListHeaderFooter
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
@@ -30,11 +30,14 @@ object BlessingDisplay: ModuleFactory(
         BlessingData(Blessing.LIFE, { life }, { Color.RED }),
         BlessingData(Blessing.WISDOM, { wisdom }, { Color.BLUE })
     )
-    @SubscribeEvent
-    fun onHeaderPacket(event: TabListEvent) {
-        if (event.packet is S47PacketPlayerListHeaderFooter) {
-            handleHeaderFooterPacket(event.packet)
+
+    fun renderBlessings(){
+        MageAddons.mc.mcProfiler.endStartSection("text")
+        if (toggle && inDungeons) {
+            GlStateManager.pushMatrix()
+            RenderUtils.renderCenteredText(listOf(blessings.toString()), 0, 0, color = 1)
         }
+
     }
 
     private fun handleHeaderFooterPacket(packet: S47PacketPlayerListHeaderFooter) {

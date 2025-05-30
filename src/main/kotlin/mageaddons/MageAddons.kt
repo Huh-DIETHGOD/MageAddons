@@ -10,8 +10,6 @@ import mageaddons.config.Config
 import mageaddons.config.PersonalBestConfig
 import mageaddons.core.ModuleManager
 import mageaddons.events.EventDispatcher
-import mageaddons.features.QOL.HotKeys
-import mageaddons.features.QOL.HotKeys.transformKey
 import mageaddons.features.dungeon.*
 import mageaddons.ui.GuiRenderer
 import mageaddons.utils.*
@@ -72,7 +70,6 @@ object MageAddons {
             GuiRenderer,
             Location,
             RunInformation,
-            HotKeys,
             PlayerUtils,
             Utils,
             ModuleManager,
