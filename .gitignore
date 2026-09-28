@@ -192,3 +192,6 @@ gradle-app.setting
 *.iml
 *.ipr
 *.iws
+
+# Local tooling data
+.codebuddy/
