@@ -1,48 +1,69 @@
 package mageaddons.features.dungeon
 
-import mageaddons.MageAddons
 import mageaddons.config.Config
-import mageaddons.core.ModuleFactory
-import mageaddons.events.TabListEvent
-import mageaddons.utils.*
-import mageaddons.utils.Location.inDungeons
-import mageaddons.utils.PlayerUtils.mcText
+import mageaddons.utils.Location
 import mageaddons.utils.impl.Blessing
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.network.play.server.S47PacketPlayerListHeaderFooter
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import mageaddons.utils.Color
+import mageaddons.utils.RenderUtils
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.DrawContext
 
-object BlessingDisplay: ModuleFactory(
-    name = "Blessing Display",
-    toggle = Config.blessingDisplay
-) {
-    var blessingDis: List<Int> = listOf()
-    private val power = Config.displayPower
-    private val time = Config.displayTime
-    private val stone = Config.displayStone
-    private val life = Config.displayLife
-    private val wisdom = Config.displayWisdom
-    private data class BlessingData(val type: Blessing, val enabled: () -> Boolean, val color: () -> Color)
-    private val blessings = listOf(
-        BlessingData(Blessing.POWER, { power }, { Color.DARK_RED }),
-        BlessingData(Blessing.TIME, { time }, { Color.PURPLE }),
-        BlessingData(Blessing.STONE, { stone }, { Color.GREEN }),
-        BlessingData(Blessing.LIFE, { life }, { Color.RED }),
-        BlessingData(Blessing.WISDOM, { wisdom }, { Color.BLUE })
-    )
+object BlessingDisplay {
+    private val mc: MinecraftClient get() = MinecraftClient.getInstance()
+    private val blessings = mutableMapOf<Blessing, Int>()
 
-    fun renderBlessings(){
-        MageAddons.mc.mcProfiler.endStartSection("text")
-        if (toggle && inDungeons) {
-            GlStateManager.pushMatrix()
-            RenderUtils.renderCenteredText(listOf(blessings.toString()), 0, 0, color = 1)
-        }
+    fun onTick() {
+        if (!Config.blessingDisplay && !Config.forceBlessingDisplay) return
+        if (!Location.inDungeons) return
 
+        // Parse blessings from tab footer text
+        parseBlessings()
     }
 
-    private fun handleHeaderFooterPacket(packet: S47PacketPlayerListHeaderFooter) {
-        Blessing.entries.forEach { blessing ->
-            blessing.regex.find(packet.footer.unformattedText.noControlCodes)?.let { match -> blessing.current = romanToInt(match.groupValues[1]) }
+    fun render(context: DrawContext) {
+        if (!Config.blessingDisplay && !Config.forceBlessingDisplay) return
+        if (!Location.inDungeons) return
+
+        var yOffset = Config.blessingY
+        val x = Config.blessingX
+
+        blessings.forEach { (blessing, level) ->
+            val shouldShow = when (blessing) {
+                Blessing.POWER -> Config.displayPower
+                Blessing.TIME -> Config.displayTime
+                Blessing.STONE -> Config.displayStone
+                Blessing.LIFE -> Config.displayLife
+                Blessing.WISDOM -> Config.displayWisdom
+            }
+
+            if (shouldShow) {
+                val text = "${blessing.symbol} ${blessing.displayName}: $level"
+                RenderUtils.drawText(context, text, x, yOffset, Color.WHITE)
+                yOffset += 12
+            }
+        }
+    }
+
+    private fun parseBlessings() {
+        // Parse blessing levels from scoreboard or tab list
+        // The footer typically shows: "Power V   Time III   Stone II   Life IV   Wisdom I"
+        val scoreboardLines = mageaddons.utils.Scoreboard.getLines()
+
+        scoreboardLines.forEach { line ->
+            val cleanLine = mageaddons.utils.Scoreboard.cleanLine(line)
+
+            Blessing.entries.forEach { blessing ->
+                val regex = Regex("${blessing.displayName}\\s+(\\w+)")
+                regex.find(cleanLine)?.let { match ->
+                    val levelStr = match.groupValues[1]
+                    val level = when {
+                        levelStr.all { it == 'I' } -> levelStr.length
+                        levelStr.toIntOrNull() != null -> levelStr.toInt()
+                        else -> 0
+                    }
+                    if (level > 0) blessings[blessing] = level
+                }
+            }
         }
     }
 }

@@ -1,145 +1,105 @@
 package mageaddons.features.dungeon
 
-import mageaddons.MageAddons.mc
 import mageaddons.config.Config
-import mageaddons.features.dungeon.RunInformation.completedRoomsPercentage
-import mageaddons.features.dungeon.RunInformation.mimicKilled
-import mageaddons.features.dungeon.RunInformation.secretPercentage
-import mageaddons.ui.GuiRenderer
-import mageaddons.utils.APIUtils
+import mageaddons.features.dungeon.Dungeon.Info
 import mageaddons.utils.Location
-import mageaddons.utils.Utils
-import gg.essential.universal.UChat
-import mageaddons.utils.MessageUtils.modMessage
-import kotlin.math.roundToInt
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 object ScoreCalculation {
-    val paul = APIUtils.hasBonusPaulScore()
-        get() = field || Config.paulBonus
-    var score = 0
-    var message300 = false
-    var message270 = false
+    var paul = false
+    private var lastScore = 0
+    private var reached300 = false
+    private var reached270 = false
+    private var score300Time = 0L
 
     fun updateScore() {
-        score = getSkillScore() + getExplorationScore() + getSpeedScore(RunInformation.timeElapsed) + getBonusScore()
-        if (score >= 300 && !message300) {
-            message300 = true
-            message270 = true
-            if (Config.scoreMessage != 0) {
-                UChat.say("/pc ${Config.message300}")
+        if (!Location.inDungeons) return
+
+        // Calculate score based on secrets, crypts, puzzles, mimic, and time
+        val secrets = Info.secretCount
+        val crypts = Info.cryptCount
+        val completedPuzzles = Info.puzzles.count { it.value }
+
+        // Skill score (simplified)
+        var skillScore = secrets.coerceAtMost(getSecretTarget())
+
+        // Explore score
+        var exploreScore = completedPuzzles * 10 + crypts * 2
+
+        // Bonus scores
+        if (Info.mimicFound) exploreScore += 2
+        if (paul) exploreScore += 10
+
+        val totalScore = (skillScore + exploreScore).coerceAtMost(300)
+
+        if (totalScore > lastScore) {
+            lastScore = totalScore
+
+            // Check score thresholds
+            if (totalScore >= 300 && !reached300) {
+                reached300 = true
+                score300Time = System.currentTimeMillis() - Info.startTime
+                handleScoreThreshold(300)
             }
-            if (Config.scoreTitle != 0) {
-                mc.thePlayer.playSound("random.orb", 1f, 0.5.toFloat())
-                GuiRenderer.displayTitle(Config.message300, 40)
-            }
-            if (Config.timeTo300) {
-                modMessage("§3300 Score§7: §a${RunInformation.timeElapsed.toDuration(DurationUnit.SECONDS)}")
-            }
-        } else if (score >= 270 && !message270) {
-            message270 = true
-            if (Config.scoreMessage == 2) {
-                UChat.say("/pc ${Config.message270}")
-            }
-            if (Config.scoreTitle == 2) {
-                mc.thePlayer.playSound("random.orb", 1f, 0.5.toFloat())
-                GuiRenderer.displayTitle(Config.message270, 40)
+            if (totalScore >= 270 && !reached270) {
+                reached270 = true
+                handleScoreThreshold(270)
             }
         }
     }
 
-    fun getSkillScore(): Int {
-        val puzzleDeduction = (RunInformation.totalPuzzles - RunInformation.completedPuzzles) * 10
-        val roomPercent = completedRoomsPercentage.coerceAtMost(1f)
-        return 20 + ((80 * roomPercent).toInt() - puzzleDeduction - getDeathDeduction()).coerceAtLeast(0)
-    }
-
-    fun getDeathDeduction(): Int {
-        var deathDeduction = RunInformation.deathCount * 2
-        if (Config.scoreAssumeSpirit) deathDeduction -= 1
-        return deathDeduction.coerceAtLeast(0)
-    }
-
-    fun getExplorationScore(): Int {
-        val secretPercent = (secretPercentage / getSecretPercent()).coerceAtMost(1f)
-        val roomPercent = completedRoomsPercentage.coerceAtMost(1f)
-        return (60 * roomPercent + 40 * secretPercent).toInt()
-    }
-
-    fun getSpeedScore(timeElapsed: Int): Int {
-        var score = 100
-        val limit = getTimeLimit()
-        if (timeElapsed < limit) return score
-        val percentageOver = (timeElapsed - limit) * 100f / limit
-        score -= getSpeedDeduction(percentageOver).toInt()
-        return if (Location.dungeonFloor == 0) (score * 0.7).roundToInt() else score
-    }
-
-    fun getBonusScore(): Int {
-        var score = 0
-        score += RunInformation.cryptsCount.coerceAtMost(5)
-        if (mimicKilled) score += 2
-        if (paul) score += 10
-        return score
-    }
-
-    fun getSecretPercent(): Float {
-        if (Location.masterMode) return 1f
+    private fun getSecretTarget(): Int {
+        // Returns the secret target for S+ based on floor
         return when (Location.dungeonFloor) {
-            0 -> .3f
-            1 -> .3f
-            2 -> .4f
-            3 -> .5f
-            4 -> .6f
-            5 -> .7f
-            6 -> .85f
-            else -> 1f
+            1 -> 30
+            2 -> 40
+            3 -> 50
+            4 -> 60
+            5 -> 70
+            6 -> 80
+            7 -> 90
+            else -> 80
         }
     }
 
-    private fun getTimeLimit(): Int {
-        return if (Location.masterMode) {
-            when (Location.dungeonFloor) {
-                1, 2, 3, 4, 5 -> 480
-                6 -> 600
-                else -> 840
-            }
-        } else {
-            when (Location.dungeonFloor) {
-                0 -> 1320
-                1, 2, 3, 5 -> 600
-                4, 6 -> 720
-                else -> 840
-            }
+    fun getSecretPercent(): Double {
+        return when (Location.dungeonFloor) {
+            1 -> 0.30
+            2 -> 0.40
+            3 -> 0.50
+            4 -> 0.60
+            5 -> 0.70
+            6 -> 0.85
+            7 -> 0.85
+            else -> 0.80
         }
     }
 
-    /**
-     * This is a very ugly function, but it works.
-     * The formula on the wiki doesn't seem to work, this variation should never be more than 2 points off.
-     */
-    private fun getSpeedDeduction(percentage: Float): Float {
-        var percentageOver = percentage
-        var deduction = 0f
+    fun getScoreDisplay(): String {
+        return "§bS+ §f(last: $lastScore/300)"
+    }
 
-        deduction += (percentageOver.coerceAtMost(20f) / 2f)
-        percentageOver -= 20f
-        if (percentageOver <= 0) return deduction
+    private fun handleScoreThreshold(score: Int) {
+        if (Config.scoreMessage == 0) return
+        if (Config.scoreMessage == 1 && score == 270) return
 
-        deduction += (percentageOver.coerceAtMost(20f) / 3.5f)
-        percentageOver -= 20f
-        if (percentageOver <= 0) return deduction
+        val message = when (score) {
+            300 -> Config.message300
+            270 -> Config.message270
+            else -> return
+        }
 
-        deduction += (percentageOver.coerceAtMost(10f) / 4f)
-        percentageOver -= 10f
-        if (percentageOver <= 0) return deduction
+        // Send party message
+        mageaddons.utils.Utils.sendClientMessage("/pc $message")
 
-        deduction += (percentageOver.coerceAtMost(10f) / 5f)
-        percentageOver -= 10f
-        if (percentageOver <= 0) return deduction
-
-        deduction += (percentageOver / 6f)
-        return deduction
+        // Show title if enabled
+        if (Config.scoreTitle > 0) {
+            if (Config.scoreTitle == 1 && score == 270) return
+            val title = if (Config.timeTo300 && score == 300 && score300Time > 0) {
+                "§6$message §7(${score300Time / 1000}s)"
+            } else {
+                "§6$message"
+            }
+            mageaddons.utils.Utils.sendClientMessage("/title @p title {\"text\":\"$title\"}")
+        }
     }
 }

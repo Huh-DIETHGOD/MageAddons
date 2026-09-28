@@ -1,11 +1,19 @@
 {
-  "minVersion": "0.6",
-  "compatibilityLevel": "JAVA_8",
+  "required": true,
+  "minVersion": "0.8",
   "package": "mageaddons.mixins",
-  "refmap": "mixins.${modid}.refmap.json",
+  "compatibilityLevel": "JAVA_21",
   "client": [
-    "MixinChunk",
-    "MixinModList",
-    "MixinNetworkManager"
-  ]
+    "MixinEntity",
+    "MixinClientPlayNetworkHandler",
+    "MixinClientPlayerEntity",
+    "MixinInGameHud",
+    "MixinKeyboard",
+    "MixinWorldRenderer",
+    "MixinGameRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "mixins.${modid}.refmap.json"
 }

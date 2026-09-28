@@ -1,6 +1,6 @@
 package mageaddons.utils.impl
 
-import net.minecraft.network.Packet
+import net.minecraft.network.packet.Packet
 
 data class PacketFunction<T : Packet<*>>(
     val type: Class<T>,

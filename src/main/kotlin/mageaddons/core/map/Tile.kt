@@ -1,6 +1,6 @@
 package mageaddons.core.map
 
-import java.awt.Color
+import mageaddons.utils.Color
 
 interface Tile {
     val x: Int

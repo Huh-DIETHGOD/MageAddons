@@ -1,96 +1,75 @@
 package mageaddons.utils
 
-import mageaddons.MageAddons.mc
-import mageaddons.features.dungeon.DungeonScan
-import mageaddons.utils.Location.inDungeons
-import mageaddons.utils.Utils.equalsOneOf
-import net.minecraft.item.ItemMap
-import net.minecraft.item.ItemStack
-import net.minecraft.network.play.server.S34PacketMaps
-import net.minecraft.util.Vec4b
-import net.minecraft.world.storage.MapData
+import net.minecraft.client.MinecraftClient
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.item.Items
+import net.minecraft.item.map.MapState
 
 object MapUtils {
-    val Vec4b.mapX
-        get() = (this.func_176112_b() + 128) shr 1
+    private val mc: MinecraftClient get() = MinecraftClient.getInstance()
 
-    val Vec4b.mapZ
-        get() = (this.func_176113_c() + 128) shr 1
+    const val roomSize = 32
+    const val startX = -185
+    const val startZ = -185
 
-    val Vec4b.yaw
-        get() = this.func_176111_d() * 22.5f
-
-    var mapData: MapData? = null
-    var startCorner = Pair(5, 5)
-    var coordMultiplier = 0.625
-    var roomSize = 16
-    var halfRoomSize = roomSize / 2
-    val connectorSize = 4
     var calibrated = false
+    var mapData: MapState? = null
     var mapDataUpdated = false
 
-    private fun getMapItem(): ItemStack? {
-        val map = mc.thePlayer?.inventory?.getStackInSlot(8) ?: return null
-        if (map.item !is ItemMap || !map.displayName.contains("Magical Map")) return null
-        return map
+    /**
+     * Attempts to calibrate the dungeon map by finding a filled map in the player's inventory
+     * and extracting its MapState.
+     */
+    fun calibrateMap(): Boolean {
+        val player = mc.player ?: return false
+
+        // Find a filled map item in the player's inventory
+        val mapStack = player.inventory.main.firstOrNull { it.item == Items.FILLED_MAP } ?: return false
+
+        val mapId = mapStack.get(DataComponentTypes.MAP_ID) ?: return false
+        val mapState = mc.world?.getMapState(mapId) ?: return false
+
+        // Check if this is a dungeon map (has dungeon-like dimensions)
+        if (mapState.dimension == mc.world?.dimension) {
+            mapData = mapState
+            return true
+        }
+
+        return false
     }
 
-    fun updateMapData(packet: S34PacketMaps) {
-        if (!inDungeons) return
-        Utils.runMinecraftThread {
-            val map = getMapItem()
-            if (map != null) {
-                mapData = (map.item as ItemMap).getMapData(map, mc.theWorld)
-            }
-            if (mapData == null) {
-                mapData = MapData("map_${packet.mapId}")
-            }
-            packet.setMapdataTo(mapData)
+    /**
+     * Checks if the map has been updated since last read
+     */
+    fun checkForMapUpdate() {
+        val player = mc.player ?: return
+        val mapStack = player.inventory.main.firstOrNull { it.item == Items.FILLED_MAP } ?: return
+        val mapId = mapStack.get(DataComponentTypes.MAP_ID) ?: return
+        val mapState = mc.world?.getMapState(mapId) ?: return
+
+        if (mapState != mapData) {
+            mapData = mapState
             mapDataUpdated = true
         }
     }
 
     /**
-     * Calibrates map metrics based on the size and location of the entrance room.
+     * Gets a map color at the given map coordinates
      */
-    fun calibrateMap(): Boolean {
-        val (start, size) = findEntranceCorner()
-        if (size.equalsOneOf(16, 18)) {
-            roomSize = size
-            halfRoomSize = roomSize / 2
-            startCorner = when (Location.dungeonFloor) {
-                0 -> Pair(22, 22)
-                1 -> Pair(22, 11)
-                2, 3 -> Pair(11, 11)
-                else -> {
-                    val startX = start and 127
-                    val startZ = start shr 7
-                    Pair(startX % (roomSize + 4), startZ % (roomSize + 4))
-                }
-            }
-            coordMultiplier = (roomSize + connectorSize).toDouble() / DungeonScan.roomSize
-            return true
-        }
-        return false
+    fun getMapColor(x: Int, z: Int): Int? {
+        val state = mapData ?: return null
+        val colors = state.colors
+        val index = x + z * 128
+        if (index < 0 || index >= colors.size) return null
+        return colors[index].toInt() and 0xFF
     }
 
     /**
-     * Finds the starting index of the entrance room as well as the size of the room.
+     * Converts world coordinates to dungeon grid coordinates
      */
-    private fun findEntranceCorner(): Pair<Int, Int> {
-        var start = 0
-        var currLength = 0
-        mapData?.colors?.forEachIndexed { index, byte ->
-            if (byte.toInt() == 30) {
-                if (currLength == 0) start = index
-                currLength++
-            } else {
-                if (currLength >= 16) {
-                    return Pair(start, currLength)
-                }
-                currLength = 0
-            }
-        }
-        return Pair(start, currLength)
+    fun worldToGrid(worldX: Int, worldZ: Int): Pair<Int, Int> {
+        val gridX = (worldX - startX) / (roomSize / 2)
+        val gridZ = (worldZ - startZ) / (roomSize / 2)
+        return Pair(gridX, gridZ)
     }
 }

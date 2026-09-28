@@ -1,16 +1,17 @@
 package mageaddons.core
 
+import mageaddons.core.map.Puzzle
 import mageaddons.core.map.RoomType
 
 data class RoomData(
     val name: String,
-    var type: RoomType,
-    val cores: List<Int>,
-    val crypts: Int,
-    val secrets: Int,
-    val trappedChests: Int,
+    val type: RoomType,
+    val core: Int = 0,
+    val secrets: Int = 0,
+    val puzzle: Puzzle? = null,
+    val crypts: List<Pair<Int, Int>> = emptyList(),
 ) {
     companion object {
-        fun createUnknown(type: RoomType) = RoomData("Unknown", type, emptyList(), 0, 0, 0)
+        val UNKNOWN = RoomData("Unknown", RoomType.NORMAL)
     }
 }

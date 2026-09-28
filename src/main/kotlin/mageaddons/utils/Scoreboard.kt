@@ -1,18 +1,30 @@
 package mageaddons.utils
 
-import mageaddons.MageAddons.mc
 import mageaddons.utils.Utils.removeFormatting
-import net.minecraft.scoreboard.ScorePlayerTeam
+import net.minecraft.client.MinecraftClient
+import net.minecraft.scoreboard.ScoreboardDisplaySlot
 
 object Scoreboard {
-    fun cleanLine(scoreboard: String): String = scoreboard.removeFormatting().filter { it.code in 32..126 }
+    private val mc: MinecraftClient get() = MinecraftClient.getInstance()
 
     fun getLines(): List<String> {
-        return mc.theWorld?.scoreboard?.run {
-            getSortedScores(getObjectiveInDisplaySlot(1) ?: return emptyList())
-                .filter { it?.playerName?.startsWith("#") == false }
-                .let { if (it.size > 15) it.drop(15) else it }
-                .map { ScorePlayerTeam.formatPlayerName(getPlayersTeam(it.playerName), it.playerName) }
-        } ?: emptyList()
+        val scoreboard = mc.player?.scoreboard ?: return emptyList()
+        val objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR) ?: return emptyList()
+
+        return scoreboard.getScoreboardEntries(objective)
+            .filter { !it.hidden() }
+            .sortedByDescending { it.value() }
+            .map { it.owner().removeFormatting() }
+    }
+
+    fun getCleanedLines(): List<String> =
+        getLines().map { cleanLine(it) }
+
+    fun cleanLine(line: String): String =
+        line.replace(Regex("§[0-9a-fk-or]"), "").trim()
+
+    fun getScoreboardTitle(): String? {
+        val scoreboard = mc.player?.scoreboard ?: return null
+        return scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR)?.displayName?.string?.removeFormatting()
     }
 }

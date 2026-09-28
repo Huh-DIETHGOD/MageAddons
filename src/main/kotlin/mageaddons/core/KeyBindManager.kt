@@ -1,45 +1,25 @@
 package mageaddons.core
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
-import org.lwjgl.input.Keyboard
-import org.lwjgl.input.Mouse
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.util.InputUtil
 
 class KeyBindManager(
     val name: String,
-    var defaultHotKey: Keybinding,
+    var defaultKey: Int,
 ) {
-    constructor(name: String, key: Int) : this(name, Keybinding(key))
+    var keyBinding: KeyBinding = KeyBinding(
+        "key.mageaddons.$name",
+        InputUtil.Type.KEYSYM,
+        defaultKey,
+        "category.mageaddons"
+    )
 
-    var hotKey: Keybinding = defaultHotKey
-
-    fun write(): JsonElement = JsonPrimitive(hotKey.key)
-
-    fun read(element: JsonElement?) {
-        element?.asInt?.let {
-            hotKey.key = it
-        }
+    init {
+        KeyBindingHelper.registerKeyBinding(keyBinding)
     }
 
-    /**
-     * Action to do, when hotkey is pressed
-     */
-    fun onPress(block: () -> Unit): KeyBindManager {
-        hotKey.onPress = block
-        return this
-    }
-}
+    fun isPressed(): Boolean = keyBinding.isPressed
 
-class Keybinding(
-    var key: Int,
-) {
-    /**
-     * Intended to active when keybind is pressed.
-     */
-    var onPress: (() -> Unit)? = null
-
-    /**
-     * @return `true` if [key] is held down.
-     */
-    fun isDown(): Boolean = if (key == 0) false else (if (key < 0) Mouse.isButtonDown(key + 100) else Keyboard.isKeyDown(key))
+    fun wasPressed(): Boolean = keyBinding.wasPressed()
 }

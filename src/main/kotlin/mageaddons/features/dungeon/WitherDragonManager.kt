@@ -1,52 +1,94 @@
 package mageaddons.features.dungeon
 
 import mageaddons.config.Config
-import mageaddons.core.ModuleFactory
-import mageaddons.features.dungeon.impl.DragonEnum
-import mageaddons.utils.DungeonUtil.getM7Phase
-import mageaddons.utils.MessageUtils.modMessage
-import mageaddons.utils.impl.M7Phases
-import net.minecraftforge.client.event.sound.PlaySoundEvent
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-import net.minecraftforge.fml.common.gameevent.TickEvent
-import java.util.*
+import mageaddons.utils.Location
+import mageaddons.utils.RenderUtils
+import mageaddons.utils.Color
+import mageaddons.utils.Utils.sendClientMessage
+import net.minecraft.client.MinecraftClient
+import net.minecraft.util.math.Box
 
-object WitherDragonManager: ModuleFactory(
-    name = "WitherDragon Manager",
-    toggle = Config.dragonHelper
-) {
-    var enabled: Boolean = toggle
-        private set
-    var priorityDragon = DragonEnum.None
-    var currentTick: Long = 0
-    private var arrowsHit: Int = 0
+/**
+ * Manages the F7/M7 P5 Wither Dragon fight.
+ */
+object WitherDragonManager {
+    private val mc: MinecraftClient get() = MinecraftClient.getInstance()
 
-    @SubscribeEvent
-    fun onPacket(event: PlaySoundEvent){
-        if(getM7Phase() !== M7Phases.P5) return
-        if (event.name != "random.successful_hit" || priorityDragon == DragonEnum.None) return
-        if (priorityDragon.entity?.isEntityAlive == true && currentTick - priorityDragon.spawnedTime < priorityDragon.skipKillTime) arrowsHit++
-
+    private enum class DragonState {
+        NOT_SPAWNED, SPAWNED, DEAD
     }
 
-    @SubscribeEvent
-    fun onServerTick(event: TickEvent.ServerTickEvent) {
-        currentTick++
+    private data class Dragon(
+        val name: String,
+        val priority: Int,
+        var state: DragonState = DragonState.NOT_SPAWNED
+    )
+
+    private val dragons = mutableListOf(
+        Dragon("Maxor", 4),
+        Dragon("Storm", 3),
+        Dragon("Goldor", 2),
+        Dragon("Necron", 1)
+    )
+
+    var isActive = false
+    private var currentTarget: Dragon? = null
+
+    fun onTick() {
+        if (!Location.inDungeons) return
+        if (!Config.dragonHelper) return
+        if (!Location.inBoss) return
+
+        // Check if in P5 (Necron phase after all dragons)
+        if (dragons.all { it.state == DragonState.DEAD }) {
+            isActive = false
+            return
+        }
+
+        isActive = true
+
+        // Find highest priority alive dragon
+        currentTarget = dragons
+            .filter { it.state == DragonState.SPAWNED }
+            .minByOrNull { it.priority }
     }
 
-    fun arrowDeath(dragon: DragonEnum) {
-        if (currentTick - dragon.spawnedTime >= dragon.skipKillTime) return
-        modMessage("§fYou hit §6$arrowsHit §farrows on §${dragon.colorCode}${dragon.name}.")
-        arrowsHit = 0
+    fun onDragonSpawn(name: String) {
+        dragons.find { it.name.equals(name, ignoreCase = true) }?.let { dragon ->
+            dragon.state = DragonState.SPAWNED
+            if (Config.dragonHelper) {
+                sendClientMessage("§c${dragon.name} has spawned! Priority: ${dragon.priority}")
+            }
+        }
     }
 
-    fun arrowSpawn(dragon: DragonEnum) {
-        if (priorityDragon == DragonEnum.None || dragon != priorityDragon) return
-        arrowsHit = 0
-            if (dragon.entity?.isEntityAlive != true && arrowsHit <= 0) return
-            modMessage("§fYou hit §6${arrowsHit} §farrows on §${dragon.colorCode}${dragon.name}${if (dragon.entity?.isEntityAlive == true) " §fin §c${String.format(
-                Locale.US, "%.2f", dragon.skipKillTime.toFloat()/20)} §fSeconds." else "."}")
-            arrowsHit = 0
+    fun onDragonDeath(name: String) {
+        dragons.find { it.name.equals(name, ignoreCase = true) }?.let { dragon ->
+            dragon.state = DragonState.DEAD
+        }
     }
 
+    fun renderWorld() {
+        if (!isActive || !Config.dragonBox) return
+
+        currentTarget?.let { dragon ->
+            // Draw a box around the targeted dragon
+            // The actual dragon positions are read from entity data
+            mc.world?.entities?.forEach { entity ->
+                if (entity.name.string.contains(dragon.name, ignoreCase = true)) {
+                    val box = entity.boundingBox.expand(0.5, 0.5, 0.5)
+                    RenderUtils.draw3DBox(box,
+                        Color(255, 0, 0, (Config.witherDoorFill * 255).toInt()),
+                        Color(255, 0, 0),
+                        Config.witherDoorFill)
+                }
+            }
+        }
+    }
+
+    fun reset() {
+        dragons.forEach { it.state = DragonState.NOT_SPAWNED }
+        isActive = false
+        currentTarget = null
+    }
 }

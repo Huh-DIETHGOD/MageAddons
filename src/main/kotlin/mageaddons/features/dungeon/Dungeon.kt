@@ -10,10 +10,8 @@ import mageaddons.utils.Location.inDungeons
 import mageaddons.utils.MapUtils
 import mageaddons.utils.TabList
 import mageaddons.utils.Utils.equalsOneOf
-import gg.essential.universal.UChat
-import net.minecraft.event.ClickEvent
-import net.minecraftforge.event.world.WorldEvent
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import mageaddons.utils.Utils.sendClientMessage
+import net.minecraft.text.ClickEvent
 
 object Dungeon {
     val dungeonTeammates = mutableMapOf<String, DungeonPlayer>()
@@ -33,7 +31,7 @@ object Dungeon {
 
         if (shouldSearchMimic()) {
             MimicDetector.findMimic()?.let {
-                if (Config.scanChatInfo) UChat.chat("&7Mimic Room: &c$it")
+                if (Config.scanChatInfo) sendClientMessage("§7Mimic Room: §c$it")
                 Info.mimicFound = true
             }
         }
@@ -58,45 +56,37 @@ object Dungeon {
         }
 
         if (DungeonScan.shouldScan) {
-//            scope.launch { DungeonScan.scan() }
             DungeonScan.scan()
         }
     }
 
-    @SubscribeEvent
     fun onChatPacket(event: ChatEvent) {
         if (!inDungeons) return
-        if (event.packet.chatComponent.siblings.any {
-                it.chatStyle?.chatClickEvent?.run {
-                    action == ClickEvent.Action.RUN_COMMAND && value == "/showextrastats"
-                } == true
-            }) {
+
+        val formattedText = event.formattedText
+
+        if (formattedText.contains("/showextrastats")) {
             ended = true
             if (Config.teamInfo) {
                 PlayerTracker.onDungeonEnd()
             }
         }
 
-        if (keyGainRegex.any { it.matches(event.packet.chatComponent.formattedText) }) {
+        if (keyGainRegex.any { it.matches(formattedText) }) {
             Info.keys++
         }
 
-        if (keyUseRegex.any { it.matches(event.packet.chatComponent.formattedText) }) {
+        if (keyUseRegex.any { it.matches(formattedText) }) {
             Info.keys--
         }
 
-        when (event.text) {
-            "Starting in 4 seconds." -> MapUpdate.preloadHeads()
-            "[NPC] Mort: Here, I found this map when I first entered the dungeon." -> {
+        when {
+            event.text.contains("Starting in 4 seconds.") -> MapUpdate.preloadHeads()
+            event.text.contains("Here, I found this map when I first entered the dungeon.") -> {
                 MapUpdate.getPlayers()
                 Info.startTime = System.currentTimeMillis()
             }
         }
-    }
-
-    @SubscribeEvent
-    fun onWorldLoad(event: WorldEvent.Unload) {
-        reset()
     }
 
     fun reset() {
@@ -129,6 +119,7 @@ object Dungeon {
         var startTime = 0L
         var ended = false
         var keys = 0
+
         fun reset() {
             dungeonList.fill(Unknown(0, 0))
             uniqueRooms.clear()

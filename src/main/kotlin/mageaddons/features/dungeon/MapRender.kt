@@ -1,281 +1,206 @@
 package mageaddons.features.dungeon
 
-import mageaddons.MageAddons.mc
 import mageaddons.config.Config
-import mageaddons.core.DungeonPlayer
+import mageaddons.core.RoomData
 import mageaddons.core.map.*
-import mageaddons.ui.ScoreElement
-import mageaddons.utils.Location.inBoss
+import mageaddons.features.dungeon.Dungeon.Info
+import mageaddons.utils.Color
+import mageaddons.utils.Location
 import mageaddons.utils.MapUtils
-import mageaddons.utils.MapUtils.connectorSize
-import mageaddons.utils.MapUtils.halfRoomSize
-import mageaddons.utils.MapUtils.roomSize
 import mageaddons.utils.RenderUtils
-import mageaddons.utils.RenderUtils.darken
-import mageaddons.utils.RenderUtils.grayScale
-import mageaddons.utils.Utils.equalsOneOf
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
-import org.lwjgl.opengl.GL11
-import java.awt.Color
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.DrawContext
 
+/**
+ * Renders the dungeon map as a HUD overlay using the 1.21.1 DrawContext API.
+ */
 object MapRender {
-    var dynamicRotation = 0f
+    private val mc: MinecraftClient get() = MinecraftClient.getInstance()
 
-    fun renderMap() {
-        mc.mcProfiler.startSection("border")
+    // Map dimensions
+    private const val TILE_SIZE = 6   // pixel size per grid tile
+    private const val ROOM_SIZE = 12  // pixel size per room (2 tiles)
+    private const val MAP_SIZE = TILE_SIZE * 11 // 66 pixels for 11x11 grid
 
-        RenderUtils.renderRect(
-            0.0, 0.0, 128.0, if (Config.mapShowRunInformation) 142.0 else 128.0, Config.mapBackground
-        )
+    fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        if (!Config.mapEnabled) return
+        if (!Location.inDungeons) return
+        if (Config.mapHideInBoss && Location.inBoss) return
 
-        RenderUtils.renderRectBorder(
-            0.0,
-            0.0,
-            128.0,
-            if (Config.mapShowRunInformation) 142.0 else 128.0,
-            Config.mapBorderWidth.toDouble(),
-            Config.mapBorder
-        )
+        val x = Config.mapX
+        val y = Config.mapY
+        val scale = Config.mapScale
 
-        mc.mcProfiler.endSection()
+        val matrices = context.matrices
+        matrices.push()
+        matrices.translate(x.toFloat(), y.toFloat(), 0f)
+        matrices.scale(scale, scale, 1f)
 
-//        if (Config.mapRotate) {
-//            GlStateManager.pushMatrix()
-//            setupRotate()
-//        } else if (Config.mapDynamicRotate) {
-//            GlStateManager.translate(64.0, 64.0, 0.0)
-//            GlStateManager.rotate(dynamicRotation, 0f, 0f, 1f)
-//            GlStateManager.translate(-64.0, -64.0, 0.0)
-//        }
+        // Draw map background
+        val bgColor = Config.mapBackground
+        RenderUtils.drawRect(context, 0, 0, (MAP_SIZE * scale).toInt(), (MAP_SIZE * scale).toInt(), bgColor)
 
-        mc.mcProfiler.startSection("rooms")
-        renderRooms()
-        mc.mcProfiler.endStartSection("text")
-        renderText()
-        if (!inBoss) {
-            mc.mcProfiler.endStartSection("heads")
-            renderPlayerHeads()
+        // Draw border
+        if (Config.mapBorderWidth > 0) {
+            RenderUtils.drawRectBorder(context, 0, 0, MAP_SIZE, MAP_SIZE,
+                Config.mapBorder, Config.mapBorderWidth)
         }
-        mc.mcProfiler.endSection()
 
-//        if (Config.mapRotate) {
-//            GL11.glDisable(GL11.GL_SCISSOR_TEST)
-//            GlStateManager.popMatrix()
-//        } else if (Config.mapDynamicRotate) {
-//            GlStateManager.translate(64.0, 64.0, 0.0)
-//            GlStateManager.rotate(-dynamicRotation, 0f, 0f, 1f)
-//            GlStateManager.translate(-64.0, -64.0, 0.0)
-//        }
-
-        if (Config.mapShowRunInformation) {
-            mc.mcProfiler.startSection("footer")
-            renderRunInformation()
-            mc.mcProfiler.endSection()
-        }
-    }
-
-    fun setupRotate() {
-        val scale = ScaledResolution(mc).scaleFactor
-        GL11.glEnable(GL11.GL_SCISSOR_TEST)
-        GL11.glScissor(
-            (Config.mapX * scale),
-            (mc.displayHeight - Config.mapY * scale - 128 * scale * Config.mapScale).toInt(),
-            (128 * scale * Config.mapScale).toInt(),
-            (128 * scale * Config.mapScale).toInt()
-        )
-        GlStateManager.translate(64.0, 64.0, 0.0)
-        GlStateManager.rotate(-mc.thePlayer.rotationYaw + 180f, 0f, 0f, 1f)
-
-//        if (Config.mapCenter) {
-//            GlStateManager.translate(
-//                -((mc.thePlayer.posX - DungeonScan.startX + 15) * MapUtils.coordMultiplier + MapUtils.startCorner.first - 2),
-//                -((mc.thePlayer.posZ - DungeonScan.startZ + 15) * MapUtils.coordMultiplier + MapUtils.startCorner.second - 2),
-//                0.0
-//            )
-//        } else {
-            GlStateManager.translate(-64.0, -64.0, 0.0)
-//        }
-    }
-
-    private fun renderRooms() {
-        GlStateManager.pushMatrix()
-        GlStateManager.translate(MapUtils.startCorner.first.toFloat(), MapUtils.startCorner.second.toFloat(), 0f)
-
-        for (y in 0..10) {
+        // Draw tiles
+        for (z in 0..10) {
             for (x in 0..10) {
-                val tile = Dungeon.Info.dungeonList[y * 11 + x]
+                val tile = Info.dungeonList[z * 11 + x]
                 if (tile is Unknown) continue
-//                if (legitRender && tile.state == RoomState.UNDISCOVERED) continue
+                drawTile(context, tile, x * TILE_SIZE, z * TILE_SIZE)
+            }
+        }
 
-                val xOffset = (x shr 1) * (roomSize + connectorSize)
-                val yOffset = (y shr 1) * (roomSize + connectorSize)
+        // Draw player positions
+        drawPlayers(context)
 
-                val xEven = x and 1 == 0
-                val yEven = y and 1 == 0
+        // Draw room names
+        if (Config.mapRoomNames > 0) {
+            drawRoomNames(context)
+        }
 
-                var color = tile.color
+        // Draw run information below map
+        if (Config.mapShowRunInformation) {
+            drawRunInfo(context)
+        }
 
-                if (tile.state.equalsOneOf(
-                        RoomState.UNDISCOVERED,
-                        RoomState.UNOPENED
-                    ) && Dungeon.Info.startTime != 0L
-                ) {
-                    if (Config.mapDarkenUndiscovered) {
-                        color = color.darken(1 - Config.mapDarkenPercent)
-                    }
-                    if (Config.mapGrayUndiscovered) {
-                        color = color.grayScale()
+        matrices.pop()
+    }
+
+    private fun drawTile(context: DrawContext, tile: Tile, px: Int, pz: Int) {
+        val color = when {
+            tile is Room -> {
+                if (tile.state == RoomState.UNDISCOVERED && Config.mapDarkenUndiscovered) {
+                    tile.color.darker(Config.mapDarkenPercent)
+                } else tile.color
+            }
+            tile is Door -> {
+                if (tile.type == DoorType.WITHER && tile.opened && Config.mapGrayUndiscovered) {
+                    Color(128, 128, 128)
+                } else tile.color
+            }
+            else -> tile.color
+        }
+
+        RenderUtils.drawRect(context, px, pz, TILE_SIZE, TILE_SIZE, color)
+
+        // Draw checkmark for cleared rooms
+        if (tile is Room && Config.mapCheckmark > 0) {
+            when (tile.state) {
+                RoomState.GREEN -> {
+                    if (Config.mapCenterCheckmark) {
+                        drawGreenCheck(context, px + TILE_SIZE / 2, pz + TILE_SIZE / 2)
                     }
                 }
-
-                when {
-                    xEven && yEven -> if (tile is Room) {
-                        RenderUtils.renderRect(
-                            xOffset,
-                            yOffset,
-                            roomSize,
-                            roomSize,
-                            color
-                        )
-
-//                        if (legitRender && tile.state == RoomState.UNOPENED) {
-//                            RenderUtils.drawCheckmark(xOffset.toFloat(), yOffset.toFloat(), tile.state)
-//                        }
+                RoomState.CLEARED -> {
+                    if (Config.mapCenterCheckmark) {
+                        drawWhiteCheck(context, px + TILE_SIZE / 2, pz + TILE_SIZE / 2)
                     }
-
-                    !xEven && !yEven -> {
-                        RenderUtils.renderRect(
-                            xOffset,
-                            yOffset,
-                            (roomSize + connectorSize),
-                            (roomSize + connectorSize),
-                            color
-                        )
+                }
+                RoomState.FAILED -> {
+                    if (Config.mapCenterCheckmark) {
+                        drawRedX(context, px + TILE_SIZE / 2, pz + TILE_SIZE / 2)
                     }
+                }
+                else -> {}
+            }
+        }
+    }
 
-                    else -> drawRoomConnector(
-                        xOffset, yOffset, connectorSize, tile is Door, !xEven, color
-                    )
+    private fun drawGreenCheck(context: DrawContext, x: Int, y: Int) {
+        RenderUtils.drawText(context, "✓", x - 3, y - 4, Color(85, 255, 85), 0.6f)
+    }
+
+    private fun drawWhiteCheck(context: DrawContext, x: Int, y: Int) {
+        RenderUtils.drawText(context, "✓", x - 3, y - 4, Color.WHITE, 0.6f)
+    }
+
+    private fun drawRedX(context: DrawContext, x: Int, y: Int) {
+        RenderUtils.drawText(context, "✗", x - 3, y - 4, Color(255, 0, 0), 0.6f)
+    }
+
+    private fun drawPlayers(context: DrawContext) {
+        val player = mc.player ?: return
+        // Draw self
+        val (selfGx, selfGz) = MapUtils.worldToGrid(player.blockX, player.blockZ)
+        val selfPx = selfGx * TILE_SIZE + TILE_SIZE / 2
+        val selfPz = selfGz * TILE_SIZE + TILE_SIZE / 2
+
+        if (selfGx in 0..10 && selfGz in 0..10) {
+            RenderUtils.drawRect(context, selfPx - 2, selfPz - 2, 4, 4, Color.WHITE)
+        }
+
+        // Draw teammates
+        Dungeon.dungeonTeammates.forEach { (name, dp) ->
+            val (gx, gz) = MapUtils.worldToGrid(dp.posX.toInt(), dp.posZ.toInt())
+            val px = gx * TILE_SIZE + TILE_SIZE / 2
+            val pz = gz * TILE_SIZE + TILE_SIZE / 2
+
+            if (gx in 0..10 && gz in 0..10) {
+                RenderUtils.drawRect(context, px - 2, pz - 2, 4, 4,
+                    when (dp.dungeonClass) {
+                        mageaddons.utils.impl.DungeonClass.HEALER -> Color(255, 255, 85)
+                        mageaddons.utils.impl.DungeonClass.MAGE -> Color(85, 255, 255)
+                        mageaddons.utils.impl.DungeonClass.BERSERK -> Color(255, 85, 85)
+                        mageaddons.utils.impl.DungeonClass.ARCHER -> Color(85, 255, 85)
+                        mageaddons.utils.impl.DungeonClass.TANK -> Color(170, 170, 170)
+                        else -> Color(255, 255, 255)
+                    })
+
+                // Draw player name if enabled
+                if (Config.playerHeads > 0) {
+                    RenderUtils.drawCenteredText(context, name,
+                        px, pz + 6, Color.WHITE, Config.playerNameScale)
                 }
             }
         }
-        GlStateManager.popMatrix()
     }
 
-    private fun renderText() {
-        GlStateManager.pushMatrix()
-        GlStateManager.translate(MapUtils.startCorner.first.toFloat(), MapUtils.startCorner.second.toFloat(), 0f)
-
-        Dungeon.Info.uniqueRooms.forEach { unique ->
-            val room = unique.mainRoom
-//            if (legitRender && room.state.equalsOneOf(RoomState.UNDISCOVERED, RoomState.UNOPENED)) return@forEach
-            val checkPos = unique.getCheckmarkPosition()
-            val namePos = unique.getNamePosition()
-            val xOffsetCheck = (checkPos.first / 2f) * (roomSize + connectorSize)
-            val yOffsetCheck = (checkPos.second / 2f) * (roomSize + connectorSize)
-            val xOffsetName = (namePos.first / 2f) * (roomSize + connectorSize)
-            val yOffsetName = (namePos.second / 2f) * (roomSize + connectorSize)
-
-            if (Config.mapCheckmark != 0 && Config.mapRoomSecrets != 2) {
-                RenderUtils.drawCheckmark(xOffsetCheck, yOffsetCheck, room.state)
+    private fun drawRoomNames(context: DrawContext) {
+        Info.uniqueRooms.forEach { room ->
+            val showName = when (Config.mapRoomNames) {
+                2 -> true // All rooms
+                1 -> room.type == RoomType.PUZZLE || room.type == RoomType.TRAP
+                else -> false
             }
 
-            val color = (if (Config.mapColorText) when (room.state) {
-                RoomState.GREEN -> Config.colorTextGreen
-                RoomState.CLEARED -> Config.colorTextCleared
-                RoomState.FAILED -> Config.colorTextFailed
+            if (!showName) return@forEach
+
+            // Calculate center position of the unique room
+            val centerX = room.tiles.map { it.first }.average().toInt() * TILE_SIZE + TILE_SIZE / 2
+            val centerZ = room.tiles.map { it.second }.average().toInt() * TILE_SIZE + TILE_SIZE / 2
+
+            val textColor = when {
+                room.getState() == RoomState.GREEN -> Config.colorTextGreen
+                room.getState() == RoomState.CLEARED -> Config.colorTextCleared
+                room.getState() == RoomState.FAILED -> Config.colorTextFailed
                 else -> Config.colorTextUncleared
-            } else Config.colorTextCleared).rgb
-
-            if (Config.mapRoomSecrets == 2) {
-                GlStateManager.pushMatrix()
-                GlStateManager.translate(
-                    xOffsetCheck + halfRoomSize, yOffsetCheck + 2 + halfRoomSize, 0f
-                )
-                GlStateManager.scale(2f, 2f, 1f)
-                RenderUtils.renderCenteredText(listOf(room.data.secrets.toString()), 0, 0, color)
-                GlStateManager.popMatrix()
             }
 
-            val name = mutableListOf<String>()
-
-            if (Config.mapRoomNames != 0 && room.data.type.equalsOneOf(
-                    RoomType.PUZZLE,
-                    RoomType.TRAP
-                ) || Config.mapRoomNames == 2 && room.data.type.equalsOneOf(
-                    RoomType.NORMAL, RoomType.RARE, RoomType.CHAMPION
-                )
-            ) {
-                name.addAll(room.data.name.split(" "))
-            }
-            if (room.data.type == RoomType.NORMAL && Config.mapRoomSecrets == 1) {
-                name.add(room.data.secrets.toString())
-            }
-            // Offset + half of roomsize
-            RenderUtils.renderCenteredText(
-                name,
-                xOffsetName.toInt() + halfRoomSize,
-                yOffsetName.toInt() + halfRoomSize,
-                color
-            )
-        }
-        GlStateManager.popMatrix()
-    }
-
-    fun renderPlayerHeads() {
-        try {
-            if (Dungeon.dungeonTeammates.isEmpty()) {
-                RenderUtils.drawPlayerHead(mc.thePlayer.name, DungeonPlayer(mc.thePlayer.locationSkin).apply {
-                    yaw = mc.thePlayer.rotationYaw
-                })
-            } else {
-                Dungeon.dungeonTeammates.forEach { (name, teammate) ->
-                    if (!teammate.dead) {
-                        RenderUtils.drawPlayerHead(name, teammate)
-                    }
+            // Show secrets if enabled
+            if (Config.mapRoomSecrets > 0 && room.type != RoomType.BLOOD && room.type != RoomType.ENTRANCE) {
+                val secretCount = room.getSecretCount()
+                if (secretCount > 0) {
+                    RenderUtils.drawCenteredText(context,
+                        "[${secretCount}]", centerX, centerZ - 4, Color.WHITE, Config.textScale)
                 }
             }
-        } catch (_: ConcurrentModificationException) {
+
+            RenderUtils.drawCenteredText(context,
+                room.name, centerX, centerZ + 2, textColor, Config.textScale)
         }
     }
 
-    private fun drawRoomConnector(
-        x: Int,
-        y: Int,
-        doorWidth: Int,
-        doorway: Boolean,
-        vertical: Boolean,
-        color: Color,
-    ) {
-        val doorwayOffset = if (roomSize == 16) 5 else 6
-        val width = if (doorway) 6 else roomSize
-        var x1 = if (vertical) x + roomSize else x
-        var y1 = if (vertical) y else y + roomSize
-        if (doorway) {
-            if (vertical) y1 += doorwayOffset else x1 += doorwayOffset
+    private fun drawRunInfo(context: DrawContext) {
+        val startY = MAP_SIZE + 4
+
+        if (Config.runInformationScore) {
+            RenderUtils.drawText(context, "Score: ${ScoreCalculation.getScoreDisplay()}",
+                0, startY, Color.WHITE, 0.65f)
         }
-        RenderUtils.renderRect(
-            x1,
-            y1,
-            if (vertical) doorWidth else width,
-            if (vertical) width else doorWidth,
-            color
-        )
-    }
-
-    fun renderRunInformation() {
-        GlStateManager.pushMatrix()
-        GlStateManager.translate(64f, 128f, 0f)
-        GlStateManager.scale(2.0 / 3.0, 2.0 / 3.0, 1.0)
-        val lines = ScoreElement.runInformationLines()
-
-        val lineOne = lines.takeWhile { it != "split" }.joinToString(separator = "    ")
-        val lineTwo = lines.takeLastWhile { it != "split" }.joinToString(separator = "    ")
-
-        mc.fontRendererObj.drawString(lineOne, -mc.fontRendererObj.getStringWidth(lineOne) / 2f, 0f, 0xffffff, true)
-        mc.fontRendererObj.drawString(lineTwo, -mc.fontRendererObj.getStringWidth(lineTwo) / 2f, 9f, 0xffffff, true)
-
-        GlStateManager.popMatrix()
     }
 }

@@ -1,9 +1,6 @@
-import dev.architectury.pack200.java.Pack200Adapter
-
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("gg.essential.loom") version "1.3.12"
+    kotlin("jvm") version "2.0.20"
+    id("fabric-loom") version "1.9-SNAPSHOT"
     idea
     java
 }
@@ -11,53 +8,55 @@ plugins {
 val modName: String by project
 val modID: String by project
 val modVersion: String by project
+val minecraftVersion: String by project
+val yarnMappings: String by project
+val loaderVersion: String by project
+val fabricVersion: String by project
+val fabricKotlinVersion: String by project
+val clothConfigVersion: String by project
 
 version = modVersion
-group = modID
+group = "mageaddons"
 
-repositories {
-    maven("https://repo.spongepowered.org/repository/maven-public/")
-    maven("https://repo.sk1er.club/repository/maven-public")
+base {
+    archivesName.set(modName)
 }
 
-val packageLib: Configuration by configurations.creating {
-    configurations.implementation.get().extendsFrom(this)
+repositories {
+    maven("https://maven.terraformersmc.com/releases/")
+    maven("https://maven.shedaniel.me/")
+    maven("https://maven.fabricmc.net/")
+    mavenCentral()
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.8.9")
-    mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
-    forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
+    minecraft("com.mojang:minecraft:$minecraftVersion")
+    mappings("net.fabricmc:yarn:$yarnMappings:v2")
+    modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
 
-    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
-    compileOnly("org.spongepowered:mixin:0.8.5")
+    // Fabric API
+    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
 
-    packageLib("gg.essential:loader-launchwrapper:1.1.3")
-    implementation("gg.essential:essential-1.8.9-forge:12132+g6e2bf4dc5")
-    implementation("org.ow2.asm:asm:9.7")
-}
+    // Fabric Language Kotlin
+    modImplementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
 
-sourceSets.main {
-    output.setResourcesDir(file("${layout.buildDirectory.asFile.get()}/classes/kotlin/main"))
+    // Cloth Config for configuration GUI
+    modApi("me.shedaniel.cloth:cloth-config-fabric:$clothConfigVersion") {
+        exclude(group = "net.fabricmc.fabric-api")
+    }
+
+    // ModMenu integration
+    modImplementation("com.terraformersmc:modmenu:10.0.0")
 }
 
 loom {
-    silentMojangMappingsLicense()
-    runConfigs {
+    accessWidenerPath.set(file("src/main/resources/mageaddons.accesswidener"))
+
+    runs {
         getByName("client") {
-            property("mixin.debug.verbose", "true")
-            property("asmhelper.verbose", "true")
-            programArgs("--tweakClass", "gg.essential.loader.stage0.EssentialSetupTweaker")
-            programArgs("--mixin", "mixins.${modID}.json")
-            isIdeConfigGenerated = true
+            ideConfigGenerated(true)
         }
-        remove(getByName("server"))
     }
-    forge {
-        pack200Provider.set(Pack200Adapter())
-        mixinConfig("mixins.${modID}.json")
-    }
-    mixin.defaultRefmapName.set("mixins.${modID}.refmap.json")
 }
 
 tasks {
@@ -65,45 +64,33 @@ tasks {
         inputs.property("modname", modName)
         inputs.property("modid", modID)
         inputs.property("version", project.version)
-        inputs.property("mcversion", "1.8.9")
+        inputs.property("minecraftVersion", minecraftVersion)
 
-        filesMatching(listOf("mcmod.info", "mixins.${modID}.json")) {
+        filesMatching("fabric.mod.json") {
             expand(
                 mapOf(
                     "modname" to modName,
                     "modid" to modID,
                     "version" to project.version,
-                    "mcversion" to "1.8.9"
-                )
+                    "minecraftVersion" to minecraftVersion,
+                ),
             )
         }
-        dependsOn(compileJava)
     }
-    jar {
-        manifest.attributes(
-            "MixinConfigs" to "mixins.${modID}.json",
-            "ModSide" to "CLIENT",
-            "TweakClass" to "gg.essential.loader.stage0.EssentialSetupTweaker",
-            "TweakOrder" to "0"
-        )
-        dependsOn(shadowJar)
-        enabled = false
-    }
-    remapJar {
-        archiveBaseName.set(modName)
-        inputFile.set(shadowJar.get().archiveFile)
-    }
-    shadowJar {
-        archiveBaseName.set(modName)
-        archiveClassifier.set("dev")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        configurations = listOf(packageLib)
-        mergeServiceFiles()
-    }
+
     withType<JavaCompile> {
         options.encoding = "UTF-8"
+        options.release.set(21)
     }
 }
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
-kotlin.jvmToolchain(8)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+kotlin {
+    jvmToolchain(21)
+}

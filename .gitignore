@@ -185,3 +185,10 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/forgegradle,gradle,java,kotlin,intellij
+
+### Project-specific ###
+# Ignore the whole IntelliJ project directory and IDE module files
+.idea/
+*.iml
+*.ipr
+*.iws

@@ -1,70 +1,49 @@
 package mageaddons.core
 
-import mageaddons.MageAddons
-import mageaddons.features.settings.AlwaysActive
-import mageaddons.utils.MessageUtils.modMessage
-import net.minecraft.network.Packet
-import net.minecraftforge.common.MinecraftForge
-import net.minecraftforge.event.ServerChatEvent
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerCustomPacketEvent
-import org.lwjgl.input.Keyboard
-import kotlin.reflect.full.hasAnnotation
+import mageaddons.events.ChatPacketEvent
+import mageaddons.events.MessageSentEvent
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.util.InputUtil
+import net.minecraft.network.packet.Packet
 
-// settings handler. for integrated registry
-abstract class ModuleFactory(
-    val name: String,
-    functionKey: Int? = Keyboard.KEY_NONE,
-    var toggle: Boolean = false,
-) {
-    // check if the function is enabled
-    var isEnabled: Boolean = toggle
-        private set
+/**
+ * Base class for toggleable feature modules.
+ * In the Fabric port, we use a simplified module system without the Essential framework.
+ */
+abstract class ModuleFactory(val name: String, defaultEnabled: Boolean = false) {
+    var enabled: Boolean = defaultEnabled
 
-    @Transient
-    val alwaysActive = this::class.hasAnnotation<AlwaysActive>()
+    /** Packet listeners - called when chat packets arrive */
+    val packetListeners: MutableList<(Packet<*>) -> Unit> = mutableListOf()
 
-    protected inline val mc get() = MageAddons.mc
+    /** Called when the module sends a chat message */
+    val messageListeners: MutableList<(MessageSentEvent) -> Unit> = mutableListOf()
 
-    // check if the function includes hotkeys
-    var keybinding: Keybinding? = functionKey?.let { Keybinding(it).apply { onPress = ::onKeybind } }
+    /** Called when a game message (non-action-bar) arrives */
+    val gameMessageListeners: MutableList<(String) -> Unit> = mutableListOf()
 
-    init {
-        MinecraftForge.EVENT_BUS.register(this)
+    /** Key bindings for this module */
+    val keyBindings: MutableList<KeyBinding> = mutableListOf()
+
+    open fun onEnable() {}
+    open fun onDisable() {}
+    open fun onTick() {}
+
+    fun registerKeyBinding(id: String, defaultKey: Int, category: String = "Mage Addons"): KeyBinding {
+        val key = KeyBinding(
+            "key.$id",
+            InputUtil.Type.KEYSYM,
+            defaultKey,
+            "category.$category"
+        )
+        KeyBindingHelper.registerKeyBinding(key)
+        keyBindings.add(key)
+        return key
     }
-
-    fun onEnable() {
-        MinecraftForge.EVENT_BUS.register(this)
-    }
-
-    fun onDisable() {
-        MinecraftForge.EVENT_BUS.unregister(this)
-    }
-
-    fun checkEnable(): Boolean = isEnabled
 
     fun toggle() {
-        isEnabled = !isEnabled
-        if (isEnabled) {
-            onEnable()
-        } else {
-            onDisable()
-        }
+        enabled = !enabled
+        if (enabled) onEnable() else onDisable()
     }
-
-    open fun onKeybind() {
-        modMessage("$name ${if (isEnabled) "§aenabled" else "§cdisabled"}.")
-    }
-
-    fun <T : Packet<*>> onPacket(
-        type: Class<T>,
-        shouldRun: () -> Boolean = { alwaysActive || isEnabled },
-        func: (T) -> Unit,
-    ) {
-        @Suppress("UNCHECKED_CAST")
-        ModuleManager.packetFunctions.add(
-            ModuleManager.PacketFunction(type, func, shouldRun) as ModuleManager.PacketFunction<Packet<*>>,
-        )
-    }
-
 }
